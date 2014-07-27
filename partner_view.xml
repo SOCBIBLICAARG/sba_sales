@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+    <record id="view_partner_filter_inh" model="ir.ui.view">
+        <field name="name">Partners - Search</field>
+        <field name="model">res.partner</field>
+	<field name="inherit_id" ref="base.view_res_partner_filter" />
+        <field name="arch" type="xml">
+                <xpath expr="//filter[@string='Country']" position="after">
+			<separator />
+                        <filter string='Region' icon="terp-mrp" domain="[]" context="{'group_by' : 'region'}"/>
+                        <filter string='Ciudad' icon="terp-mrp" domain="[]" context="{'group_by' : 'city'}"/>
+                        <filter string='Canal' icon="terp-mrp" domain="[]" context="{'group_by' : 'canal'}"/>
+                </xpath>
+                <xpath expr="//filter[@string='Suppliers']" position="after">
+        	        <filter string="Saldo Pendiente" icon="terp-camera_test"  domain="[('credit','>',0)]"
+				 help = "Clientes con saldo deudor" />
+                </xpath>
+		        <!-- filter string="Planificada" icon="terp-document-new" domain="[('estado_llamada','=','10 - PLA')]" help = "Planificada" />
+        	        <filter string="En Proceso" icon="terp-camera_test"   domain="[('estado_llamada','!=','10 - PLA')]" help = "En Proceso" />
+			<separator />
+			<filter icon="terp-go-today" string="Hoy" 
+				domain="[('fecha_llamada','&lt;=',time.strftime('%%Y-%%m-%%d 23:59:59')),
+					('fecha_llamada','&gt;=',time.strftime('%%Y-%%m-%%d 00:00:00'))]" 
+				help="Orders processed Today or planned for Today"/>
+			<filter icon="terp-go-today" string="Anteriores a Hoy" 
+				domain="[('fecha_llamada','&lt;=',time.strftime('%%Y-%%m-%%d 00:00:00'))]" 
+				help="Orders processed Today or planned for Today"/>
+			<filter icon="terp-go-today" string="Posteriores a Hoy" 
+				domain="[('fecha_llamada','&gt;=',time.strftime('%%Y-%%m-%%d 23:59:59'))]" 
+				help="Orders processed Today or planned for Today"/>
+			<separator / -->
+        </field>
+    </record>
+
+	<record model="ir.ui.view" id="user_sba_form_view">
+	    <field name="name">res.users.sba.form.inherit</field>
+	    <field name="model">res.users</field>
+	    <field name="inherit_id" ref="base.view_users_form"/>
+	    <field name="arch" type="xml">
+	        <data>
+			<notebook>
+				<page string="SBA">
+				   <group colspan="2">
+					<field name="cod_vendedor_epicor" /> 
+				   </group>
+				</page>
+			</notebook>
+		</data>
+	    </field>
+	</record>
+
+	<record model="ir.ui.view" id="partner_sba_form_view">
+	    <field name="name">res.partner.sba.form.inherit</field>
+	    <field name="model">res.partner</field>
+	    <field name="inherit_id" ref="base.view_partner_form"/>
+	    <field name="arch" type="xml">
+	        <data>
+			<notebook>
+				<page string="SBA">
+				   <group colspan="2">
+					<field name="region" /> 
+					<field name="canal" /> 
+					<field name="correlativo" /> 
+					<field name="cod_epicor" /> 
+				   </group>
+				</page>
+			</notebook>
+			<!-- field name="function" position="after">
+				<group>
+					<field name="document_type_id" />
+					<field name="document_number" />
+				</group>
+			</field -->
+		</data>
+	    </field>
+	</record>
+
+	<!-- REGION -->
+        <record id="region_tree_view" model="ir.ui.view">
+            <field name="name">res.partner.region.treeview</field>
+            <field name="model">res.partner.region</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Region" editable="bottom">
+                        <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="region_view" model="ir.ui.view">
+            <field name="name">res.partner.region.view</field>
+            <field name="model">res.partner.region</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Region">
+                    <group col="6" colspan="4">
+                        <field name="name"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="action_region_form" model="ir.actions.act_window">
+            <field name="name">Region</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">res.partner.region</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="region_tree_view"/>
+        </record>
+
+        <menuitem id="menu_sba_region_id" name="Regiones" parent="base.menu_sales" sequence="10" action="action_region_form" />
+
+	<!-- CANAL -->
+        <record id="canal_tree_view" model="ir.ui.view">
+            <field name="name">res.partner.canal.treeview</field>
+            <field name="model">res.partner.canal</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Canal" editable="bottom">
+                        <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="region_view" model="ir.ui.view">
+            <field name="name">res.partner.canal.view</field>
+            <field name="model">res.partner.canal</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Canal">
+                    <group col="6" colspan="4">
+                        <field name="name"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="action_canal_form" model="ir.actions.act_window">
+            <field name="name">Canal</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">res.partner.canal</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="canal_tree_view"/>
+        </record>
+
+        <menuitem id="menu_sba_canal_id" name="Canales" parent="base.menu_sales" sequence="20" action="action_canal_form" />
+
+
+    </data>
+</openerp>
