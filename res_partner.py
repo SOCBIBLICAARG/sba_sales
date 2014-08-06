@@ -8,6 +8,9 @@ class partner_region(osv.osv):
 
 	_columns = {
 		'name': fields.char('Name',size=32),
+		'printed_address': fields.char('Direccion impresa',size=64),
+		'printed_email': fields.char('E-mail impreso'),
+		'printed_phone': fields.char('Tel.impreso'),
 		}
 
 partner_region()
@@ -77,7 +80,8 @@ class res_partner(osv.osv):
 	_columns = {
 		'cod_epicor': fields.char('Codigo EPICOR',size=10),
 		# 'region': fields.selection((('1','BUE'),('2','ROS'),('3','CBA'),('4','MDQ'),('5','BBA'),('N/A','N/A')),'Region'),
-		'region': fields.selection((('BUE','BUE'),('ROS','ROS'),('CBA','CBA'),('MDQ','MDQ'),('BBA','BBA'),('N/A','N/A')),'Region'),
+		# 'region': fields.selection((('BUE','BUE'),('ROS','ROS'),('CBA','CBA'),('MDQ','MDQ'),('BBA','BBA'),('N/A','N/A')),'Region'),
+		'region': fields.many2one('res.partner.region','Region'),
 		# 'canal': fields.selection((('1','Distribuidor'),('3','Libreria'),('4','Instituciones/Escuelas'),('5','Colptores'),('6','Iglesias'),('9','Iglesias'),('N/A','N/A'),('7','Desconocido'),('8','Desconocido')),'Canal'),
 		'canal': fields.selection((('Distribuidor','Distribuidor'),('Libreria','Libreria'),('Instituciones/Escuelas','Instituciones/Escuelas'),('Colptores','Colptores'),('Iglesias','Iglesias'),('Iglesias (9)','Iglesias'),('N/A','N/A'),('Desconocido','Desconocido'),('Desconocido','Desconocido')),'Canal'),
 		'correlativo': fields.char('Nro. Correlativo Categoria',size=4),
