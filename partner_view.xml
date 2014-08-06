@@ -67,6 +67,11 @@
 				   </group>
 				</page>
 			</notebook>
+			<field name="property_account_position"  position="replace"/>
+			<field name="vat"  position="attributes">
+				<attribute name="invisible">1</attribute>
+			</field>
+
 			<!-- field name="function" position="after">
 				<group>
 					<field name="document_type_id" />
