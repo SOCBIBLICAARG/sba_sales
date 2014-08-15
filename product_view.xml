@@ -2,6 +2,23 @@
 <openerp>
     <data>
 
+        <record model="ir.ui.view" id="product_pricelist_price_tree_view">
+            <field name="name">product.pricelist.price.tree.inherit</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_product_tree_view"/>
+            <field name="arch" type="xml">
+                <data>
+                        <field name="lst_price" position="after">
+                              <!-- field name="pricelist_price" / -->
+                              <field name="pricelist_price_distrib" />
+                              <field name="pricelist_price_librerias" />
+                              <field name="pricelist_price_iglesias" />
+                        </field>
+                </data>
+            </field>
+        </record>
+
+
     <record id="view_product_filter_inh" model="ir.ui.view">
         <field name="name">Products - Search</field>
         <field name="model">product.product</field>
@@ -252,6 +269,44 @@
         </record>
 
         <menuitem id="menu_sba_subcategoria_id" name="Subcategoria" parent="base.menu_product" sequence="5" action="action_subcategoria_form" />
+
+	<!-- IDIOMA -->
+        <record id="language_tree_view" model="ir.ui.view">
+            <field name="name">product.language.treeview</field>
+            <field name="model">product.language</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Language" editable="bottom">
+                        <field name="name"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="language_view" model="ir.ui.view">
+            <field name="name">product.language.view</field>
+            <field name="model">product.language</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Language">
+                    <group col="6" colspan="4">
+                        <field name="name"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="action_language_form" model="ir.actions.act_window">
+            <field name="name">Idioma</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">product.language</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="language_tree_view"/>
+        </record>
+
+        <menuitem id="menu_sba_language_id" name="Idioma" parent="base.menu_product" sequence="5" action="action_language_form" />
+
 
     </data>
 </openerp>

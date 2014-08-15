@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+    <record id="view_lead_filter_inh" model="ir.ui.view">
+        <field name="name">Opportunitiess - Search</field>
+        <field name="model">crm.lead</field>
+	<field name="inherit_id" ref="crm.view_crm_case_leads_filter" />
+        <field name="arch" type="xml">
+                <xpath expr="//filter[@string='Unassigned']" position="before">
+        	     <filter string="Vencidas" icon="terp-camera_test"  
+			domain="[('stage_id','in',[1,3,4,5])]"  help = "Vencidas" />
+                </xpath>
+                <!-- xpath expr="//filter[@string='Unassigned']" position="before">
+        	     <filter string="Vencidas" icon="terp-camera_test"  
+			domain="[('date_deadline','&lt;',(time.strftime('%Y-%m-%d'))],('stage_id','in',[1,3,4,5])]"  help = "Vencidas" />
+                </xpath -->
+        </field>
+    </record>
+
+    </data>
+</openerp>

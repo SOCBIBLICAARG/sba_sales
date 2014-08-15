@@ -28,13 +28,15 @@
     'description': "",
     'author': 'Gustavo Orrillo',
     'website': 'http://business.moldeo.coop',
-    'depends': ['base','sale'],
+    'depends': ['base','sale','crm','product'],
     'init_xml': [],
     'update': [
 	],
     'data': [
 	'partner_view.xml',
 	'product_view.xml',
+	'crm_view.xml',
+	'sale_view.xml',
 	'ir_cron.xml'
     ],
     'demo_xml': [

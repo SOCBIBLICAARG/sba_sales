@@ -1,4 +1,5 @@
 from openerp.osv import osv,fields
+from datetime import date
 
 class product_language(osv.osv):
 	_name = "product.language"
@@ -49,6 +50,47 @@ class product_product(osv.osv):
 	_name = "product.product"
 	_inherit = "product.product"
 
+	def _fnct_pricelist_price(self, cr, uid, ids, field_name, args, context=None):
+        	product_pricelist_obj = self.pool.get('product.pricelist')
+
+	        if context is None:
+        	    context = {}
+	        res = {}
+        	for product in self.browse(cr, uid, ids, context=context):
+	            res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[1],product.id,1.0,1,{'uom':1,'date':date.today()})[1]
+        	return res
+
+	def _fnct_pricelist_price_distrib(self, cr, uid, ids, field_name, args, context=None):
+        	product_pricelist_obj = self.pool.get('product.pricelist')
+
+	        if context is None:
+        	    context = {}
+	        res = {}
+        	for product in self.browse(cr, uid, ids, context=context):
+	        	res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[12],product.id,1.0,1,{'uom':1,'date':date.today()})[12]
+        	return res
+
+	def _fnct_pricelist_price_librerias(self, cr, uid, ids, field_name, args, context=None):
+        	product_pricelist_obj = self.pool.get('product.pricelist')
+
+	        if context is None:
+        	    context = {}
+	        res = {}
+        	for product in self.browse(cr, uid, ids, context=context):
+	        	res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[9],product.id,1.0,1,{'uom':1,'date':date.today()})[9]
+        	return res
+
+	def _fnct_pricelist_price_iglesias(self, cr, uid, ids, field_name, args, context=None):
+        	product_pricelist_obj = self.pool.get('product.pricelist')
+
+	        if context is None:
+        	    context = {}
+	        res = {}
+        	for product in self.browse(cr, uid, ids, context=context):
+	        	res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[14],product.id,1.0,1,{'uom':1,'date':date.today()})[14]
+        	return res
+
+
 	_columns = {
 		'events_ids': fields.many2many('product.event','product_event_rel','product_id','event_id','Eventos'),
 		'familia': fields.many2one('product.familia','Familia'),
@@ -59,6 +101,10 @@ class product_product(osv.osv):
 		'sba_sku_no': fields.char('Codigo SBU',size=32),
 		'sba_code': fields.char('Codigo SBA',size=32),
 		'product_origin': fields.selection((('Propio','Propio'),('Terceros','Terceros')),'Origen del producto'),
+        	'pricelist_price': fields.function(_fnct_pricelist_price, string='Precio LP'),
+        	'pricelist_price_distrib': fields.function(_fnct_pricelist_price_distrib, string='Precio Distribuidores'),
+        	'pricelist_price_librerias': fields.function(_fnct_pricelist_price_librerias, string='Precio Librerias'),
+        	'pricelist_price_iglesias': fields.function(_fnct_pricelist_price_iglesias, string='Precio Iglesias'),
 		#'familia': fields.selection((('BIBLIAS','BIBLIAS'),('LIBROS','LIBROS'),('SELECCIONES NL','SELECCIONES NL'),\
 		#	('SELECCIONES','SELECCIONES'),('PORCIONES NL','PORCIONES NL'),('PORCIONES','PORCIONES'),('NT','NT'),\
 		#	('MEDIA','MEDIA'),('OTROS','OTROS')),'Familias'),
