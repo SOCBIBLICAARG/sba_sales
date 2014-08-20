@@ -64,7 +64,7 @@ class sale_order(osv.osv):
 
 
         def write(self, cr, uid, ids, vals, context=None):
-		if 'discount_ok' not in vals.keys():
+		if 'discount_ok' not in vals.keys() and 'date_confirm' not in vals.keys():
 	                obj = self.browse(cr, uid, ids[0], context=context)
 			if obj.state in ['draft','sent']:
 				if obj.add_disc < 0.01:
