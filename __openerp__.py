@@ -22,7 +22,7 @@
 
 {
     'name': 'SBA Sales Customizations',
-    'version': '0.1.1',
+    'version': '0.1.2',
     'category': 'Tools',
     'complexity': "easy",
     'description': "",

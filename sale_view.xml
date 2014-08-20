@@ -2,7 +2,7 @@
 <openerp>
     <data>
 
-	<record id="view_saleorder_filter_inh" model="ir.ui.view">
+	<!-- record id="view_saleorder_filter_inh" model="ir.ui.view">
         	<field name="name">Sale Orders - Search</field>
 	        <field name="model">sale.order</field>
 		<field name="inherit_id" ref="sale.view_sales_order_filter" />
@@ -11,6 +11,19 @@
 	                <xpath expr="//filter[@string='Sales']" position="before" groups="base.group_sale_manager">
         	                <filter string='Discount' icon="terp-mrp" domain="[('discount_ok','=','False')]" />
                 	</xpath>
+		</data>
+		</field>
+	</record -->
+
+	<record id="view_saleorder_tree_inh" model="ir.ui.view">
+        	<field name="name">Quotations</field>
+	        <field name="model">sale.order</field>
+		<field name="inherit_id" ref="sale.view_quotation_tree" />
+	        <field name="arch" type="xml">
+		<data>
+	                 <field name="state" position="after">
+				<field name="discount_ok" />
+			</field>
 		</data>
 		</field>
 	</record>
@@ -37,11 +50,11 @@
 			</field>
 			<xpath
 	                        expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="after">
-	                         <field name="list_price_perunit" />
+	                         <field name="list_price_perunit" string="Precio c/dto"/>
 			</xpath>
 
 			<field name="price_unit" position="after">
-				<field name="list_price_perunit" />
+				<field name="list_price_perunit" string="Precio c/dto"/>
 			</field>
 		</data>
 	    </field>
