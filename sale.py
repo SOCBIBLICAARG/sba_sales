@@ -58,26 +58,30 @@ class sale_order(osv.osv):
 			vals['discount_ok'] = True
 		else:
 			vals['discount_ok'] = False
-
-        	return_id =  super(sale_order, self).create(cr, uid, vals, context=context)
-		if not vals['discount_ok']:
-			raise osv.except_osv(('Warning!'), ("El descuento necesita ser aprobado"))
+        	return super(sale_order, self).create(cr, uid, vals, context=context)
+		# if not vals['discount_ok']:
+		#	raise osv.except_osv(('Warning!'), ("El descuento necesita ser aprobado"))
 
 
         def write(self, cr, uid, ids, vals, context=None):
 		if 'discount_ok' not in vals.keys():
 	                obj = self.browse(cr, uid, ids[0], context=context)
-			if obj.state == 'draft' and (not obj.discount_ok):
+			if obj.state in ['draft','sent']:
 				if obj.add_disc < 0.01:
 					vals['discount_ok'] = True
 				else:
 					vals['discount_ok'] = False
+			if 'add_disc' in vals.keys():
+				if vals['add_disc'] < 0.01:
+					vals['discount_ok'] = True
+				else:
+					vals['discount_ok'] = False
 
-        	return_id = super(sale_order, self).write(cr, uid, ids, vals, context=context)
-		if not vals['discount_ok']:
-			raise osv.except_osv(('Warning!'), ("El descuento necesita ser aprobado"))
+        	return super(sale_order, self).write(cr, uid, ids, vals, context=context)
+	#	#if not vals['discount_ok']:
+	#	#	raise osv.except_osv(('Warning!'), ("El descuento necesita ser aprobado"))
 
-	def _check_validation(self, cr, uid, ids, context = None):
+	def _check_validation_sba(self, cr, uid, ids, context = None):
                 obj = self.browse(cr, uid, ids[0], context=context)
                 if obj.state == 'manual' or obj.state == 'sent':
                 	if obj.add_disc < 0.01:
@@ -87,7 +91,7 @@ class sale_order(osv.osv):
 		return True
 
 
-	_constraints = [(_check_validation, '\n\nAcaba de otorgar un descuento superior al descuento que se le permite otorgar.\nPor favor, pida a su superior que autorice el pedido', ['add_disc','state']),
+	_constraints = [(_check_validation_sba, '\n\nUd acaba de otorgar un descuento superior al descuento que se le permite otorgar.\nPor favor, pida a su superior que autorice el pedido', ['add_disc','state']),
 			]
 
 	def approve_discount(self, cr, uid, ids, context=None):
@@ -244,7 +248,8 @@ class sale_order_line(osv.osv):
 
 	_columns = {
 		'original_price': fields.related('product_id','list_price',string='Original Price',readonly=True),
-                'list_price_perunit': fields.function(_fnct_listprice_unit, string='LP per unit'),
+                'list_price_perunit': fields.function(_fnct_listprice_unit, string='Precio Publico'),
 		}
+
 
 sale_order_line()
