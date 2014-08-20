@@ -21,6 +21,9 @@
 	    <field name="inherit_id" ref="sale.view_order_form" />
 	    <field name="arch" type="xml">
 	        <data>
+                        <!-- button name="action_quotation_send" string="Send by Email" type="object" states="draft" 
+				class="oe_highlight" groups="base.group_sale_manager"/ -->
+
                         <button name="action_button_confirm" position="after">
 	                        <button name="approve_discount" states="draft" string="Aprobar Dtos" class="oe_highlight" 
         	                              type="object"  groups="base.group_sale_manager"/>
@@ -33,11 +36,11 @@
 				<field name="discount_ok" />
 			</field>
 			<xpath
-	                        expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="before">
+	                        expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="after">
 	                         <field name="list_price_perunit" />
 			</xpath>
 
-			<field name="price_unit" position="before">
+			<field name="price_unit" position="after">
 				<field name="list_price_perunit" />
 			</field>
 		</data>
