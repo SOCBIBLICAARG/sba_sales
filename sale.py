@@ -84,6 +84,8 @@ class sale_order(osv.osv):
 	def _check_validation_sba(self, cr, uid, ids, context = None):
                 obj = self.browse(cr, uid, ids[0], context=context)
                 if obj.state == 'manual' or obj.state == 'sent':
+			if obj.discount_ok:
+				return True
                 	if obj.add_disc < 0.01:
                         	return True
 			if not obj.discount_ok:
