@@ -37,7 +37,9 @@
 	'product_view.xml',
 	'crm_view.xml',
 	'sale_view.xml',
-	'ir_cron.xml'
+	'sale_report.xml',
+	'ir_cron.xml',
+        'views/report_saleorder_sba.xml',
     ],
     'demo_xml': [
     ],
