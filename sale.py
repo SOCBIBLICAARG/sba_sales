@@ -1,4 +1,5 @@
 from openerp.osv import osv,fields
+from openerp.tools.translate import _
 from datetime import date
 from datetime import datetime
 import string
@@ -13,6 +14,7 @@ class sale_stockout(osv.osv):
 		'sale_id': fields.many2one('sale.order','Pedido'),
 		'qty': fields.integer('Cantidad'),
 		}
+
 
         def _update_stock_outs(self,cr,uid,ids=None,context=None):
 
@@ -52,7 +54,28 @@ class sale_order(osv.osv):
 		'discount_ok': False
 		}
 
+	def action_quotation_send(self, cr, uid, ids, context=None):
+        	'''
+	        This function opens a window to compose an email, with the edi sale template message loaded by default
+        	'''
+		if not self.approve_discount_so(cr,uid,ids):
+			raise osv.except_osv(('Warning!'), ("El descuento necesita ser aprobado"))
+			return None
+			
+		return super(sale_order, self).action_quotation_send(cr,uid,ids,context=context)
 
+
+	def print_quotation(self, cr, uid, ids, context=None):
+        	'''
+	        This function prints the sales order and mark it as sent, so that we can see more easily the next step of the workflow
+        	'''
+		if not self.approve_discount_so(cr,uid,ids):
+			raise osv.except_osv(('Warning!'), ("El descuento necesita ser aprobado"))
+			return None
+			
+		return super(sale_order, self).print_quotation(cr,uid,ids,context=context)
+	
+		
         def create(self, cr, uid, vals, context=None):
 		if vals['add_disc'] < 0.01:
 			vals['discount_ok'] = True
@@ -234,6 +257,19 @@ class sale_order_line(osv.osv):
 	_name = "sale.order.line"
 	_inherit = "sale.order.line"
 
+	def onchange_discount(self, cr, uid, ids, discount, context=None):
+		import pdb;pdb.set_trace()
+		obj = self.browse(cr,uid,ids)
+		if obj.discount > discount:
+			res['discount'] = discount
+		else:
+	        	warning = {
+		            'title': _('Alerta Lista de Precios!'),
+        		    'message' : _('Si cambia la lista de precios, no se modificaran los precios a los productos ya cargados.')
+		        	}
+        		return {'warning': warning, 'value': value}
+        	return {'value': res}
+
         def _fnct_listprice_unit(self, cr, uid, ids, field_name, args, context=None):
 
                 if context is None:
@@ -246,10 +282,25 @@ class sale_order_line(osv.osv):
 			res[obj.id] = 0
                 return res
 
+        #def write(self, cr, uid, ids, vals, context=None):
+	#	obj = self.browse(cr,uid,ids)
+	#	diff_discount = obj.discount - obj.original_discount
+	#	if diff_discount > 0:
+	#		order_id = obj.order_id
+	#		vals = {}
+	#		vals['discount_ok'] = False
+	#		return_id = self.pool.get('sale.order').write(cr,uid,order_id.id,vals,context=context)
+			
+        #	return super(sale_order_line, self).write(cr, uid, ids, vals, context=context)
 
+        #def create(self, cr, uid, vals, context=None):
+	#	if 'discount' in vals.keys():
+	#		vals['original_discount'] = vals['discount']
+        #	return super(sale_order_line, self).create(cr, uid, vals, context=context)
 
 	_columns = {
 		'original_price': fields.related('product_id','list_price',string='Original Price',readonly=True),
+		'original_discount': fields.float('Original Discount',readonly=True),
                 'list_price_perunit': fields.function(_fnct_listprice_unit, string='Precio Publico'),
 		}
 

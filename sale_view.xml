@@ -35,10 +35,6 @@
 	    <field name="arch" type="xml">
 	        <data>
 
-                      <button name="action_quotation_send" string="Send by Email" type="object" 
-				states="draft" class="oe_highlight" groups="base.group_user" position="replace"/>
-
-
                         <button name="action_button_confirm" position="after">
 	                        <button name="approve_discount" states="draft" string="Aprobar Dtos" class="oe_highlight" 
         	                              type="object"  groups="base.group_sale_manager"/>
@@ -58,6 +54,17 @@
 			<field name="price_unit" position="after">
 				<field name="list_price_perunit" string="Precio c/dto"/>
 			</field>
+			<!-- field name="discount" on_change="onchange_discount(discount,context)" / -->
+			<!-- field name="discount" position="attributes">
+			            <attribute name="readonly">1</attribute>
+			</field>
+                        <xpath
+                               expr="//field[@name='order_line']/tree//field[@name='discount']" on_change="onchange_discount(discount,context)" />
+                        <xpath expr="//field[@name='order_line']/tree//field[@name='discount']" position="attributes" >
+				<attribute name="readonly">1</attribute>
+			</xpath -->
+			
+
 		</data>
 	    </field>
 	</record>
