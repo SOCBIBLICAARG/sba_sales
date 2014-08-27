@@ -2,7 +2,7 @@
 <openerp>
     <data>
 
-	<record id="view_saleorder_filter_inh" model="ir.ui.view">
+	<!-- record id="view_saleorder_filter_inh" model="ir.ui.view">
         	<field name="name">Sale Orders - Search</field>
 	        <field name="model">sale.order</field>
 		<field name="inherit_id" ref="sale.view_sales_order_filter" />
@@ -13,6 +13,19 @@
                 	</xpath>
 		</data>
 		</field>
+	</record -->
+
+	<record id="view_saleorder_tree_inh" model="ir.ui.view">
+        	<field name="name">Quotations</field>
+	        <field name="model">sale.order</field>
+		<field name="inherit_id" ref="sale.view_quotation_tree" />
+	        <field name="arch" type="xml">
+		<data>
+	                 <field name="state" position="after">
+				<field name="discount_ok" />
+			</field>
+		</data>
+		</field>
 	</record>
 
 	<record model="ir.ui.view" id="sale_order_sba_form_view">
@@ -21,8 +34,6 @@
 	    <field name="inherit_id" ref="sale.view_order_form" />
 	    <field name="arch" type="xml">
 	        <data>
-                        <!-- button name="action_quotation_send" string="Send by Email" type="object" states="draft" 
-				class="oe_highlight" groups="base.group_sale_manager"/ -->
 
                         <button name="action_button_confirm" position="after">
 	                        <button name="approve_discount" states="draft" string="Aprobar Dtos" class="oe_highlight" 
@@ -37,12 +48,23 @@
 			</field>
 			<xpath
 	                        expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="after">
-	                         <field name="list_price_perunit" />
+	                         <field name="list_price_perunit" string="Precio c/dto"/>
 			</xpath>
 
 			<field name="price_unit" position="after">
-				<field name="list_price_perunit" />
+				<field name="list_price_perunit" string="Precio c/dto"/>
 			</field>
+			<!-- field name="discount" on_change="onchange_discount(discount,context)" / -->
+			<!-- field name="discount" position="attributes">
+			            <attribute name="readonly">1</attribute>
+			</field>
+                        <xpath
+                               expr="//field[@name='order_line']/tree//field[@name='discount']" on_change="onchange_discount(discount,context)" />
+                        <xpath expr="//field[@name='order_line']/tree//field[@name='discount']" position="attributes" >
+				<attribute name="readonly">1</attribute>
+			</xpath -->
+			
+
 		</data>
 	    </field>
 	</record>

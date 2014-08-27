@@ -9,12 +9,8 @@
         <field name="arch" type="xml">
                 <xpath expr="//filter[@string='Unassigned']" position="before">
         	     <filter string="Vencidas" icon="terp-camera_test"  
-			domain="[('stage_id','in',[1,3,4,5])]"  help = "Vencidas" />
+			domain="[('date_deadline','&lt;',(time.strftime('%Y-%m-%d')))]"  help = "Vencidas" />
                 </xpath>
-                <!-- xpath expr="//filter[@string='Unassigned']" position="before">
-        	     <filter string="Vencidas" icon="terp-camera_test"  
-			domain="[('date_deadline','&lt;',(time.strftime('%Y-%m-%d'))],('stage_id','in',[1,3,4,5])]"  help = "Vencidas" />
-                </xpath -->
         </field>
     </record>
 

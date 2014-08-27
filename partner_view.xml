@@ -12,25 +12,18 @@
                         <filter string='Region' icon="terp-mrp" domain="[]" context="{'group_by' : 'region'}"/>
                         <filter string='Ciudad' icon="terp-mrp" domain="[]" context="{'group_by' : 'city'}"/>
                         <filter string='Canal' icon="terp-mrp" domain="[]" context="{'group_by' : 'canal'}"/>
+                        <filter string='Lista de Precios' icon="terp-mrp" domain="[]" context="{'group_by' : 'property_product_pricelist'}"/>
                 </xpath>
                 <xpath expr="//filter[@string='Suppliers']" position="after">
         	        <filter string="Saldo Pendiente" icon="terp-camera_test"  domain="[('credit','>',0)]"
 				 help = "Clientes con saldo deudor" />
                 </xpath>
-		        <!-- filter string="Planificada" icon="terp-document-new" domain="[('estado_llamada','=','10 - PLA')]" help = "Planificada" />
-        	        <filter string="En Proceso" icon="terp-camera_test"   domain="[('estado_llamada','!=','10 - PLA')]" help = "En Proceso" />
-			<separator />
-			<filter icon="terp-go-today" string="Hoy" 
-				domain="[('fecha_llamada','&lt;=',time.strftime('%%Y-%%m-%%d 23:59:59')),
-					('fecha_llamada','&gt;=',time.strftime('%%Y-%%m-%%d 00:00:00'))]" 
-				help="Orders processed Today or planned for Today"/>
-			<filter icon="terp-go-today" string="Anteriores a Hoy" 
-				domain="[('fecha_llamada','&lt;=',time.strftime('%%Y-%%m-%%d 00:00:00'))]" 
-				help="Orders processed Today or planned for Today"/>
-			<filter icon="terp-go-today" string="Posteriores a Hoy" 
-				domain="[('fecha_llamada','&gt;=',time.strftime('%%Y-%%m-%%d 23:59:59'))]" 
-				help="Orders processed Today or planned for Today"/>
-			<separator / -->
+                <xpath expr="//filter[@string='Suppliers']" position="after">
+        	        <filter string="Distribuidores" icon="terp-camera_test"  domain="[('canal','=','Distribuidor')]"
+				 help = "Canal Distribuidor" />
+        	        <filter string="Iglesias" icon="terp-camera_test"  domain="[('canal','=','Iglesias')]"
+				 help = "Canal Iglesias" />
+                </xpath>
         </field>
     </record>
 

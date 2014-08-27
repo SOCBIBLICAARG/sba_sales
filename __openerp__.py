@@ -22,7 +22,7 @@
 
 {
     'name': 'SBA Sales Customizations',
-    'version': '0.1.1',
+    'version': '0.1.6',
     'category': 'Tools',
     'complexity': "easy",
     'description': "",
@@ -37,7 +37,9 @@
 	'product_view.xml',
 	'crm_view.xml',
 	'sale_view.xml',
-	'ir_cron.xml'
+	'sale_report.xml',
+	'ir_cron.xml',
+        'views/report_saleorder_sba.xml',
     ],
     'demo_xml': [
     ],
