@@ -67,9 +67,10 @@ class product_product(osv.osv):
         	    context = {}
 	        res = {}
 		pricelist_id = self.pool.get('product.pricelist').search(cr,uid,[('name','=','DISTRIBUIDORES')])
-        	for product in self.browse(cr, uid, ids, context=context):
-	        	res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[pricelist_id[0]],\
-				product.id,1.0,1,{'uom':1,'date':date.today()})[pricelist_id[0]]
+		if pricelist_id:
+	        	for product in self.browse(cr, uid, ids, context=context):
+		        	res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[pricelist_id[0]],\
+					product.id,1.0,1,{'uom':1,'date':date.today()})[pricelist_id[0]]
         	return res
 
 	def _fnct_pricelist_price_librerias(self, cr, uid, ids, field_name, args, context=None):
@@ -79,9 +80,10 @@ class product_product(osv.osv):
         	    context = {}
 	        res = {}
 		pricelist_id = self.pool.get('product.pricelist').search(cr,uid,[('name','=','LIBRERIAS')])
-        	for product in self.browse(cr, uid, ids, context=context):
-	        	res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[pricelist_id[0]],\
-				product.id,1.0,1,{'uom':1,'date':date.today()})[pricelist_id[0]]
+		if pricelist_id:
+	        	for product in self.browse(cr, uid, ids, context=context):
+	        		res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[pricelist_id[0]],\
+					product.id,1.0,1,{'uom':1,'date':date.today()})[pricelist_id[0]]
         	return res
 
 	def _fnct_pricelist_price_iglesias(self, cr, uid, ids, field_name, args, context=None):
@@ -91,9 +93,10 @@ class product_product(osv.osv):
         	    context = {}
 	        res = {}
 		pricelist_id = self.pool.get('product.pricelist').search(cr,uid,[('name','=','IGLESIAS, COLPO, ESC, INST, PASTORE')])
-        	for product in self.browse(cr, uid, ids, context=context):
-	        	res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[pricelist_id[0]],\
-				product.id,1.0,1,{'uom':1,'date':date.today()})[pricelist_id[0]]
+		if pricelist_id:
+	        	for product in self.browse(cr, uid, ids, context=context):
+		        	res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[pricelist_id[0]],\
+					product.id,1.0,1,{'uom':1,'date':date.today()})[pricelist_id[0]]
         	return res
 
 
