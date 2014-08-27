@@ -66,7 +66,7 @@ class product_product(osv.osv):
 	        if context is None:
         	    context = {}
 	        res = {}
-		pricelist_id = self.pool.get('product.pricelist').search(cr,uid,[('name','=','DISTRIBUIDORES')])
+		pricelist_id = self.pool.get('product.pricelist').search(cr,uid,[('name','like','DISTRIBUIDORES')])
 		if pricelist_id:
 	        	for product in self.browse(cr, uid, ids, context=context):
 		        	res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[pricelist_id[0]],\
@@ -79,7 +79,7 @@ class product_product(osv.osv):
 	        if context is None:
         	    context = {}
 	        res = {}
-		pricelist_id = self.pool.get('product.pricelist').search(cr,uid,[('name','=','LIBRERIAS')])
+		pricelist_id = self.pool.get('product.pricelist').search(cr,uid,[('name','like','LIBRERIAS')])
 		if pricelist_id:
 	        	for product in self.browse(cr, uid, ids, context=context):
 	        		res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[pricelist_id[0]],\
@@ -92,7 +92,7 @@ class product_product(osv.osv):
 	        if context is None:
         	    context = {}
 	        res = {}
-		pricelist_id = self.pool.get('product.pricelist').search(cr,uid,[('name','=','IGLESIAS, COLPO, ESC, INST, PASTORE')])
+		pricelist_id = self.pool.get('product.pricelist').search(cr,uid,[('name','like','IGLESIAS, COLPO, ESC, INST, PASTORE')])
 		if pricelist_id:
 	        	for product in self.browse(cr, uid, ids, context=context):
 		        	res[product.id] = self.pool.get('product.pricelist').price_get(cr,uid,[pricelist_id[0]],\
