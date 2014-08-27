@@ -83,6 +83,7 @@
             <field name="arch" type="xml">
                 <tree string="Region" editable="bottom">
                         <field name="name"/>
+                        <field name="printed_name"/>
                         <field name="printed_address" />
                         <field name="printed_email" />
                         <field name="printed_phone" />

@@ -5,7 +5,7 @@
             id="report_sale_order"
             string="Quotation / Order"
             model="sale.order" 
-            report_type="qweb-pdf"
+            report_type="qweb-html"
             file="sba_sales.report_saleorder_sba" 
             name="sba_sales.report_saleorder_sba" 
         />

@@ -58,9 +58,11 @@ class sale_order(osv.osv):
         	'''
 	        This function opens a window to compose an email, with the edi sale template message loaded by default
         	'''
-		if not self.approve_discount_so(cr,uid,ids):
-			raise osv.except_osv(('Warning!'), ("El descuento necesita ser aprobado"))
-			return None
+		obj = self.browse(cr,uid,ids)
+		if obj:
+			if not self.approve_discount_so(cr,uid,ids) and not obj.discount_ok:
+				raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
+				return None
 			
 		return super(sale_order, self).action_quotation_send(cr,uid,ids,context=context)
 
@@ -69,11 +71,15 @@ class sale_order(osv.osv):
         	'''
 	        This function prints the sales order and mark it as sent, so that we can see more easily the next step of the workflow
         	'''
-		if not self.approve_discount_so(cr,uid,ids):
-			raise osv.except_osv(('Warning!'), ("El descuento necesita ser aprobado"))
-			return None
+		obj = self.browse(cr,uid,ids)
+		if obj:
+			if not self.approve_discount_so(cr,uid,ids) and not obj.discount_ok:
+				raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
+				return None
+	        assert len(ids) == 1, 'This option should only be used for a single id at a time'
+        	self.signal_workflow(cr, uid, ids, 'quotation_sent')
+	        return self.pool['report'].get_action(cr, uid, ids, 'sba_sales.report_saleorder_sba', context=context)
 			
-		return super(sale_order, self).print_quotation(cr,uid,ids,context=context)
 	
 		
         def create(self, cr, uid, vals, context=None):
@@ -275,12 +281,13 @@ class sale_order_line(osv.osv):
 
                 if context is None:
                     context = {}
-        	obj = self.browse(cr, uid, ids[0], context=context)
                 res = {}
-		if obj.product_uom_qty > 0:
-	                res[obj.id] = obj.price_subtotal / obj.product_uom_qty
-		else:
-			res[obj.id] = 0
+		for id in ids:
+        		obj = self.browse(cr, uid, id, context=context)
+			if obj.product_uom_qty > 0:
+		                res[obj.id] = obj.price_subtotal / obj.product_uom_qty
+			else:
+				res[obj.id] = 0
                 return res
 
         #def write(self, cr, uid, ids, vals, context=None):
