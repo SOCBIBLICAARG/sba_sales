@@ -55,8 +55,10 @@
 				   <separator string="Clasificacion" />
 				   <group colspan="4">
 					<field name="sba_sku_no" /> 
-					<field name="sba_code" /> 
+					<field name="sba_code" />
+					<field name="promotional_price" /> 
 				   </group>
+				   <separator string="Clasificacion" />
 				   <group colspan="2">
 					<field name="familia" /> 
 					<field name="categoria" /> 

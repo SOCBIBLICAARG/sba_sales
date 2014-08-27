@@ -106,42 +106,14 @@ class product_product(osv.osv):
 		'subcategoria': fields.many2one('product.subcategoria','SubCategoria'),
 		'sba_sku_no': fields.char('Codigo SBU',size=32),
 		'sba_code': fields.char('Codigo SBA',size=32),
+		'promotional_price': fields.float('Precio Promocional'),
 		'product_origin': fields.selection((('Propio','Propio'),('Terceros','Terceros')),'Origen del producto'),
         	'pricelist_price': fields.function(_fnct_pricelist_price, string='Precio LP'),
         	'pricelist_price_distrib': fields.function(_fnct_pricelist_price_distrib, string='Precio Distribuidores'),
         	'pricelist_price_librerias': fields.function(_fnct_pricelist_price_librerias, string='Precio Librerias'),
         	'pricelist_price_iglesias': fields.function(_fnct_pricelist_price_iglesias, string='Precio Iglesias'),
-		#'familia': fields.selection((('BIBLIAS','BIBLIAS'),('LIBROS','LIBROS'),('SELECCIONES NL','SELECCIONES NL'),\
-		#	('SELECCIONES','SELECCIONES'),('PORCIONES NL','PORCIONES NL'),('PORCIONES','PORCIONES'),('NT','NT'),\
-		#	('MEDIA','MEDIA'),('OTROS','OTROS')),'Familias'),
-		#'categoria': fields.selection((('ACADEMICO','ACADEMICO'),('LUJO','LUJO'),('MISIONERA','MISIONERA'),('PRECIO MEDIO','PRECIO MEDIO'),\
-		#		('LIBROS','LIBROS'),('EDUC DIFUSION','EDUC DIFUSION'),('JUEGOS','JUEGOS'),('MUSICA','MUSICA'),('REPLICA','REPLICA'),\
-		#		('VARIOS','VARIOS'),('SELECCION','SELECCION')),'Categoria'),
-		#'version': fields.selection((('Dios Habla Hoy','Dios Habla Hoy'),
-		#			     ('Dios Habla Hoy con Deutero','Dios Habla Hoy con Deutero'),
-		#			     ('Nueva Version Internacional','Nueva Version Internacional'),
-		#			     ('Reina Valera 1909','Reina Valera 1909'),
-		#			     ('Reina Valera 1960','Reina Valera 1960'),
-		#			     ('Reina Valera 1995','Reina Valera 1995'),
-		#			     ('Reina Valera Contemporanea','Reina Valera Contemporanea'),
-		#			     ('Traduccion Lenguaje Actual','Traduccion Lenguaje Actual'),
-		#			     ('Traduccion Lenguaje Actual con Deutero','Traduccion Lenguaje Actual con Deutero'),
-		#			     ('Multiversion','Multiversion'),
-		#			     ('Ninguna','Ninguna')),'Version'),
-		#'subcategoria': fields.selection((('Digital','Digital'),('Especializado','Especializado'),\
-		#				 ('Especializado-Jovenes','Especializado-Jovenes'),('Especializado-Mujeres','Especializado-Mujeres'),\
-		#				 ('Estandar','Estandar'),('Estandar Economico','Estandar Economico'),\
-		#				 ('Estandar-Letra Grande','Estandar-Letra Grande'),('Estudio','Estudio'),\
-		#				 ('Ninios','Ninios')),'Sub-Categoria'),
 		}
 
-		#'familia': fields.selection((('BIBLIAS','BIBLIAS'),('LIBROS','LIBROS'),('SELECCIONES NL','SELECCIONES NL'),\
-		#	('SELECCIONES','SELECCIONES'),('PORCIONES NL','PORCIONES NL'),('PORCIONES','PORCIONES'),('NT','NT'),\
-		#	('MEDIA','MEDIA'),('OTROS','OTROS')),'Familias'),
-		#	}
-		# 'categoria': fields.selection((('ACADEMICO','ACADEMICO'),('LUJO','LUJO'),('MISIONERA','MISIONERA'),('PRECIO MEDIO','PRECIO MEDIO'),\
-		#		('LIBROS','LIBROS'),('EDUC DIFUSION','EDUC DIFUSION'),('JUEGOS','JUEGOS'),('MUSICA','MUSICA'),('REPLICA','REPLICA'),\
-		#		('VARIOS','VARIOS'),('SELECCION','SELECCION')),'Categoria'),
 	
 product_product()
 

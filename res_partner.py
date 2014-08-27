@@ -8,6 +8,7 @@ class partner_region(osv.osv):
 
 	_columns = {
 		'name': fields.char('Name',size=32),
+		'printed_name': fields.char('Nombre impreso',size=64),
 		'printed_address': fields.char('Direccion impresa',size=64),
 		'printed_email': fields.char('E-mail impreso'),
 		'printed_phone': fields.char('Tel.impreso'),
