@@ -128,7 +128,8 @@ class sale_order(osv.osv):
 
 	def approve_discount(self, cr, uid, ids, context=None):
 		vals = {
-			'discount_ok': self.approve_discount_so(cr,uid,ids)
+			'discount_ok': self.approve_discount_so(cr,uid,ids),
+			'state': 'sent',
 			}
 		self.write(cr,uid,ids,vals)
 
@@ -197,13 +198,15 @@ class sale_order(osv.osv):
         	                return_flag_level2 = True
 	
                 	return_value = return_flag_level1 or return_flag_level2
-	        elif obj.add_disc > config_disc_level2:
+	        elif obj.add_disc >= config_disc_level2 and obj.add_disc < config_disc_level3:
         	        return_flag_level2 = False
                 	for user_group in user_list_aprob2:
 	                    if uid in user_group['users']:
         	                return_flag_level2 = True
 
 	                return_value = return_flag_level2
+		elif obj.add_disc > config_disc_level3:
+			return False
         	if not return_value:
                 	return False
 	        if obj.partner_id.credit == 0:

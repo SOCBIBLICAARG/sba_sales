@@ -36,7 +36,7 @@
 	        <data>
 
                         <button name="action_button_confirm" position="after">
-	                        <button name="approve_discount" states="draft" string="Aprobar Dtos" class="oe_highlight" 
+	                        <button name="approve_discount" states="draft,sent" string="Aprobar Dtos" class="oe_highlight" 
         	                              type="object"  groups="base.group_sale_manager"/>
 			</button>
 
