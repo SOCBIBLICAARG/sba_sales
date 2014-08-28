@@ -126,10 +126,6 @@
 			<strong>Cotizado por:</strong>
 			<span t-field="o.create_uid.name" />
 		    </p>
-                    <p t-if="o.payment_term">
-                        <strong>Términos de Pago:</strong>
-                        <span t-field="o.payment_term"/>
-                    </p>
                     <p t-if="o.add_disc">
                         <strong>Descuento gral.:</strong>
                         <span t-field="o.add_disc"> % </span>
@@ -147,8 +143,6 @@ pagado en destino.</span>
 			<li>Pago fácil (podemos comenzar a ofrecerlo como medio para todas)</li>
 			<li>Otros medios</li>
 		    </span>
-		    <br />
-		    <br />
                     <table class="table table-condensed">
                         <thead>
                         	<tr>
