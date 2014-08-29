@@ -198,6 +198,7 @@ class sale_order(osv.osv):
         	                return_flag_level2 = True
 	
                 	return_value = return_flag_level1 or return_flag_level2
+			return return_value
 	        elif obj.add_disc >= config_disc_level2 and obj.add_disc < config_disc_level3:
         	        return_flag_level2 = False
                 	for user_group in user_list_aprob2:
