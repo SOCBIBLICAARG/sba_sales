@@ -139,6 +139,10 @@ class sale_order(osv.osv):
         	obj = self.browse(cr, uid, ids[0], context=context)
 		if obj.add_disc < 0.01:
 			return True
+		user_obj = self.pool.get('res.users').browse(cr,uid,uid)
+		warehouse_id = self.pool.get('res.partner').browse(cr,uid,user_obj.partner_id.id).warehouse_id
+		if obj.warehouse_id != warehouse_id:
+			return False
 	        config_adddisc = 0
         	config_credit_tolerance = 0
 	        config_disc_level1 = 0
