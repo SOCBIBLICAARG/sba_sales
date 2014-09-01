@@ -52,7 +52,7 @@ class sale_order(osv.osv):
 
 	_defaults = {
 		'discount_ok': False,
-		'warehouse_id': lambda self,cr,uid, context: self.pool.get('res.users').browse(cr, uid, uid, context).warehouse_id,
+		'warehouse_id': lambda self,cr,uid, context: self.pool.get('res.users').browse(cr, uid, uid, context).partner_id.warehouse_id,
 		}
 
 	def action_quotation_send(self, cr, uid, ids, context=None):

@@ -37,7 +37,6 @@
 				<page string="SBA">
 				   <group colspan="2">
 					<field name="cod_vendedor_epicor" /> 
-					<field name="warehouse_id" /> 
 				   </group>
 				</page>
 			</notebook>
@@ -58,6 +57,7 @@
 					<field name="canal" /> 
 					<field name="correlativo" /> 
 					<field name="cod_epicor" /> 
+					<field name="warehouse_id" /> 
 				   </group>
 				</page>
 			</notebook>
