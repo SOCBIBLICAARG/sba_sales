@@ -184,8 +184,9 @@ class sale_order(osv.osv):
 	        user_list_aprob2 = self.pool.get('res.groups').read(cr, uid, group_aprob2_id, ['users'])
         	user_list_aprob3 = self.pool.get('res.groups').read(cr, uid, group_aprob3_id, ['users'])
 	        return_value = True
-        	if obj.add_disc < config_disc_level1:
+        	if obj.add_disc <= config_disc_level1:
                 	return_value = True
+			return return_value
 	        elif obj.add_disc >= config_disc_level1 and obj.add_disc < config_disc_level2:
         	        return_flag_level1 = False
                 	return_flag_level2 = False
@@ -207,7 +208,13 @@ class sale_order(osv.osv):
 
 	                return_value = return_flag_level2
 		elif obj.add_disc > config_disc_level3:
-			return False
+        	        return_flag_level3 = False
+                	for user_group in user_list_aprob3:
+	                    if uid in user_group['users']:
+        	                return_flag_level3 = True
+
+	                return_value = return_flag_level3
+			return return_value
         	if not return_value:
                 	return False
 	        if obj.partner_id.credit == 0:

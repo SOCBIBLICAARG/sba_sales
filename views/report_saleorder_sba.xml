@@ -49,10 +49,10 @@
                         <thead>
                             <tr>
                                 <th>Descripción</th>
-                                <th>Impuestos</th>
                                 <th class="text-right">Cantidad</th>
                                 <th class="text-right">Precio Pub.</th>
                                 <th class="text-right">Precio c/dto.</th>
+                                <th class="text-right">Impuestos</th>
                                 <th groups="sale.group_discount_per_so_line" class="text-right">Desc.(%)</th>
                                 <th class="text-right">Subtotal</th>
                             </tr>
@@ -61,9 +61,6 @@
                             <tr t-foreach="o.order_line" t-as="l">
                                 <td>
                                    <span  t-field="l.name"/>
-                                </td>
-                                <td>
-                                    <span t-esc="', '.join(map(lambda x: x.name, l.tax_id))"/>
                                 </td>
                                 <td class="text-right">
                                     <span t-field="l.product_uom_qty"/>
@@ -74,6 +71,9 @@
                                 </td>
                                 <td class="text-right">
                                     <span t-field="l.list_price_perunit" />
+                                </td>
+                                <td>
+                                    <span t-esc="', '.join(map(lambda x: x.name, l.tax_id))"/>
                                 </td>
                                 <td groups="sale.group_discount_per_so_line" class="text-right">
                                     <span t-field="l.discount"/>
@@ -140,7 +140,7 @@ pagado en destino.</span>
 			<li>Contado o efectivo</li>
 			<li>Deposito o transferencia</li>
 			<li>Tarjeta de credito y debito habilitadas</li>
-			<li>Pago fácil (podemos comenzar a ofrecerlo como medio para todas)</li>
+			<li>Pago fácil (en lugares habilitados)</li>
 			<li>Otros medios</li>
 		    </span>
                     <table class="table table-condensed">
