@@ -32,6 +32,7 @@ class res_user(osv.osv):
 
 	_columns = {
 		'cod_vendedor_epicor': fields.char('Cod.Vendedor EPICOR',size=16),
+		'warehouse_id': fields.many2one('stock.warehouse','Warehouse'),
 		}
 res_user()
 

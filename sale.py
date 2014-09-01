@@ -51,7 +51,8 @@ class sale_order(osv.osv):
 
 
 	_defaults = {
-		'discount_ok': False
+		'discount_ok': False,
+		'warehouse_id': lambda self,cr,uid, context: self.pool.get('res.users').browse(cr, uid, uid, context).warehouse_id,
 		}
 
 	def action_quotation_send(self, cr, uid, ids, context=None):
@@ -183,6 +184,11 @@ class sale_order(osv.osv):
         	user_list_aprob1 = self.pool.get('res.groups').read(cr, uid, group_aprob1_id, ['users'])
 	        user_list_aprob2 = self.pool.get('res.groups').read(cr, uid, group_aprob2_id, ['users'])
         	user_list_aprob3 = self.pool.get('res.groups').read(cr, uid, group_aprob3_id, ['users'])
+		# If UID is director, return True
+               	for user_group in user_list_aprob3:
+	        	if uid in user_group['users']:
+				return True
+		# otherwise...
 	        return_value = True
         	if obj.add_disc <= config_disc_level1:
                 	return_value = True
