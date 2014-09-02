@@ -78,7 +78,7 @@ class sale_order(osv.osv):
 				raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
 				return None
 	        assert len(ids) == 1, 'This option should only be used for a single id at a time'
-        	self.signal_workflow(cr, uid, ids, 'quotation_sent')
+        	# self.signal_workflow(cr, uid, ids, 'quotation_sent')
 	        return self.pool['report'].get_action(cr, uid, ids, 'sba_sales.report_saleorder_sba', context=context)
 			
 	
