@@ -97,7 +97,8 @@ class sale_order(osv.osv):
 		if ids:
 			if 'discount_ok' not in vals.keys() and 'date_confirm' not in vals.keys():
 		                obj = self.browse(cr, uid, ids[0], context=context)
-				if obj.state in ['draft','sent']:
+				# if obj.state in ['draft','sent']:
+				if obj.state in ['draft']:
 					if obj.add_disc < 0.01:
 						vals['discount_ok'] = True
 					else:

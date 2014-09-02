@@ -126,10 +126,6 @@
 			<strong>Cotizado por:</strong>
 			<span t-field="o.create_uid.name" />
 		    </p>
-                    <p t-if="o.add_disc">
-                        <strong>Descuento gral.:</strong>
-                        <span t-field="o.add_disc"> % </span>
-                    </p>
 		    <p>
 			<span>NOTA: La entrega y envio de los materiales solicitados está sujeta a disponibilidad de los mismos y al saldo de
 Cuenta Corriente. Los precios y descuentos están sujetos a verificación. El flete es a cargo del COMPRADOR, y será
