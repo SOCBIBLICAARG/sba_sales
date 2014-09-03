@@ -12,7 +12,6 @@
                         <filter string='Region' icon="terp-mrp" domain="[]" context="{'group_by' : 'region'}"/>
                         <filter string='Ciudad' icon="terp-mrp" domain="[]" context="{'group_by' : 'city'}"/>
                         <filter string='Canal' icon="terp-mrp" domain="[]" context="{'group_by' : 'canal'}"/>
-                        <filter string='Lista de Precios' icon="terp-mrp" domain="[]" context="{'group_by' : 'property_product_pricelist'}"/>
                 </xpath>
                 <xpath expr="//filter[@string='Suppliers']" position="after">
         	        <filter string="Saldo Pendiente" icon="terp-camera_test"  domain="[('credit','>',0)]"
