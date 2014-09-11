@@ -22,13 +22,13 @@
 
 {
     'name': 'SBA Sales Customizations',
-    'version': '0.1.7',
+    'version': '0.1.7.15',
     'category': 'Tools',
     'complexity': "easy",
     'description': "",
     'author': 'Gustavo Orrillo',
     'website': 'http://business.moldeo.coop',
-    'depends': ['base','sale','crm','product'],
+    'depends': ['base','sale','crm','product','stock'],
     'init_xml': [],
     'update': [
 	],
@@ -38,6 +38,7 @@
 	'crm_view.xml',
 	'sale_view.xml',
 	'sale_report.xml',
+	'sale_report_discount_view.xml',
 	'ir_cron.xml',
         'views/report_saleorder_sba.xml',
     ],

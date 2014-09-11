@@ -87,6 +87,7 @@ class res_partner(osv.osv):
 		'canal': fields.selection((('Distribuidor','Distribuidor'),('Libreria','Libreria'),('Instituciones/Escuelas','Instituciones/Escuelas'),('Colptores','Colptores'),('Iglesias','Iglesias'),('Iglesias (9)','Iglesias'),('N/A','N/A'),('Desconocido','Desconocido'),('Desconocido','Desconocido')),'Canal'),
 		'correlativo': fields.char('Nro. Correlativo Categoria',size=4),
 	        'user_id': fields.many2one('res.users', 'Promotor', help='The internal user that is in charge of communicating with this contact if any.'),
+		'warehouse_id': fields.many2one('stock.warehouse','Warehouse'),
 		}
        
         def write(self, cr, uid, ids, vals, context=None):

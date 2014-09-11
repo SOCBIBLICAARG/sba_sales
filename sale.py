@@ -51,7 +51,8 @@ class sale_order(osv.osv):
 
 
 	_defaults = {
-		'discount_ok': False
+		'discount_ok': False,
+		# 'warehouse_id': lambda self,cr,uid, context: self.pool.get('res.users').browse(cr, uid, uid, context).partner_id.warehouse_id,
 		}
 
 	def action_quotation_send(self, cr, uid, ids, context=None):
@@ -77,7 +78,7 @@ class sale_order(osv.osv):
 				raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
 				return None
 	        assert len(ids) == 1, 'This option should only be used for a single id at a time'
-        	self.signal_workflow(cr, uid, ids, 'quotation_sent')
+        	# self.signal_workflow(cr, uid, ids, 'quotation_sent')
 	        return self.pool['report'].get_action(cr, uid, ids, 'sba_sales.report_saleorder_sba', context=context)
 			
 	
@@ -96,7 +97,8 @@ class sale_order(osv.osv):
 		if ids:
 			if 'discount_ok' not in vals.keys() and 'date_confirm' not in vals.keys():
 		                obj = self.browse(cr, uid, ids[0], context=context)
-				if obj.state in ['draft','sent']:
+				# if obj.state in ['draft','sent']:
+				if obj.state in ['draft']:
 					if obj.add_disc < 0.01:
 						vals['discount_ok'] = True
 					else:
@@ -128,7 +130,8 @@ class sale_order(osv.osv):
 
 	def approve_discount(self, cr, uid, ids, context=None):
 		vals = {
-			'discount_ok': self.approve_discount_so(cr,uid,ids)
+			'discount_ok': self.approve_discount_so(cr,uid,ids),
+			'state': 'sent',
 			}
 		self.write(cr,uid,ids,vals)
 
@@ -137,6 +140,10 @@ class sale_order(osv.osv):
         	obj = self.browse(cr, uid, ids[0], context=context)
 		if obj.add_disc < 0.01:
 			return True
+		user_obj = self.pool.get('res.users').browse(cr,uid,uid)
+		warehouse_id = self.pool.get('res.partner').browse(cr,uid,user_obj.partner_id.id).warehouse_id
+		if obj.warehouse_id != warehouse_id:
+			return False
 	        config_adddisc = 0
         	config_credit_tolerance = 0
 	        config_disc_level1 = 0
@@ -182,9 +189,15 @@ class sale_order(osv.osv):
         	user_list_aprob1 = self.pool.get('res.groups').read(cr, uid, group_aprob1_id, ['users'])
 	        user_list_aprob2 = self.pool.get('res.groups').read(cr, uid, group_aprob2_id, ['users'])
         	user_list_aprob3 = self.pool.get('res.groups').read(cr, uid, group_aprob3_id, ['users'])
+		# If UID is director, return True
+               	for user_group in user_list_aprob3:
+	        	if uid in user_group['users']:
+				return True
+		# otherwise...
 	        return_value = True
-        	if obj.add_disc < config_disc_level1:
+        	if obj.add_disc <= config_disc_level1:
                 	return_value = True
+			return return_value
 	        elif obj.add_disc >= config_disc_level1 and obj.add_disc < config_disc_level2:
         	        return_flag_level1 = False
                 	return_flag_level2 = False
@@ -197,13 +210,22 @@ class sale_order(osv.osv):
         	                return_flag_level2 = True
 	
                 	return_value = return_flag_level1 or return_flag_level2
-	        elif obj.add_disc > config_disc_level2:
+			return return_value
+	        elif obj.add_disc >= config_disc_level2 and obj.add_disc < config_disc_level3:
         	        return_flag_level2 = False
                 	for user_group in user_list_aprob2:
 	                    if uid in user_group['users']:
         	                return_flag_level2 = True
 
 	                return_value = return_flag_level2
+		elif obj.add_disc > config_disc_level3:
+        	        return_flag_level3 = False
+                	for user_group in user_list_aprob3:
+	                    if uid in user_group['users']:
+        	                return_flag_level3 = True
+
+	                return_value = return_flag_level3
+			return return_value
         	if not return_value:
                 	return False
 	        if obj.partner_id.credit == 0:

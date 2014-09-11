@@ -36,7 +36,7 @@
 	        <data>
 
                         <button name="action_button_confirm" position="after">
-	                        <button name="approve_discount" states="draft" string="Aprobar Dtos" class="oe_highlight" 
+	                        <button name="approve_discount" states="draft,sent" string="Aprobar Dtos" class="oe_highlight" 
         	                              type="object"  groups="base.group_sale_manager"/>
 			</button>
 
@@ -58,6 +58,12 @@
 				<attribute name="readonly">1</attribute>
 			</xpath>
 			<field name="discount" position="attributes">
+			            <attribute name="readonly">1</attribute>
+			</field>
+                        <xpath expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="attributes" >
+				<attribute name="readonly">1</attribute>
+			</xpath>
+			<field name="price_unit" position="attributes">
 			            <attribute name="readonly">1</attribute>
 			</field>
 			<!-- field name="discount" on_change="onchange_discount(discount,context)" / -->
