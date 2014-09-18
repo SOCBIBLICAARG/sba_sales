@@ -5,11 +5,11 @@
     <record id="view_lead_filter_inh" model="ir.ui.view">
         <field name="name">Opportunitiess - Search</field>
         <field name="model">crm.lead</field>
-	<field name="inherit_id" ref="crm.view_crm_case_leads_filter" />
+	<field name="inherit_id" ref="crm.view_crm_case_opportunities_filter" />
         <field name="arch" type="xml">
-                <xpath expr="//filter[@string='Unassigned']" position="before">
+                <xpath expr="//filter[@string='Won']" position="before">
         	     <filter string="Vencidas" icon="terp-camera_test"  
-			domain="[('date_deadline','&lt;',(time.strftime('%Y-%m-%d')))]"  help = "Vencidas" />
+			domain="[('date_deadline','&lt;',((datetime.date.today()-datetime.timedelta(days=7)).strftime('%Y-%m-%d')))]"  help = "Vencidas" />
                 </xpath>
         </field>
     </record>
