@@ -42,8 +42,7 @@
 	'ir_cron.xml',
         'views/report_saleorder_sba.xml',
     ],
-    'demo_xml': [
-    ],
+    'demo_xml': [],
     'test':[
     ],
     'installable': True,
