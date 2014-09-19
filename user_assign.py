@@ -41,7 +41,6 @@ class crm_lead_user_assign(osv.osv_memory):
 			'user_id': obj.user_id.id
 			}
 		name = ''
-		import pdb;pdb.set_trace()
 		for lead in self.pool.get('crm.lead').browse(cr,uid,lead_ids):
 			name = name + ', ' + lead.name
 
@@ -60,3 +59,5 @@ class crm_lead_user_assign(osv.osv_memory):
 	        return {}
 
 crm_lead_user_assign()
+
+

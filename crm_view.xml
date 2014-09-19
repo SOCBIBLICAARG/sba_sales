@@ -20,6 +20,10 @@
 	    <field name="inherit_id" ref="crm.crm_case_form_view_oppor" />
 	    <field name="arch" type="xml">
 	        <data>
+			<button name="case_mark_won" position="before">
+                              <button name="sba_sales.action_crmlead_user_assign_gus" string="Delegar" type="action" class="oe_highlight"/>
+			</button>
+
 			<field name="user_id" position="attributes">
 			            <attribute name="readonly">1</attribute>
 			</field>
