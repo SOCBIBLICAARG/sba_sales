@@ -35,7 +35,7 @@ class crm_lead(osv.osv):
 				'description': 'Vencimiento oportunidad ' + vals['name'] + '\nMonto estimado: ' + str(vals['planned_revenue'] or 0),
 				'name': vals['name'],
 				'opportunity_id': opportunity_id,
-				'alarm_id': [(6,0,alarm_id)],
+				'alarm_ids': [(6,0,alarm_id)],
 				}	
 			event_id = self.pool.get('calendar.event').create(cr,uid,vals_event)
 		return opportunity_id
