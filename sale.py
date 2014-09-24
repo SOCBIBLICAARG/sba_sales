@@ -38,6 +38,26 @@ class sale_stockout(osv.osv):
 
 sale_stockout()
 
+class survey_input(osv.osv):
+	_name = "survey.user_input"
+	_inherit = "survey.user_input"
+
+	_columns = {
+		'opportunity_id': fields.many2one('sale.order','Opportunity'),
+		}
+
+survey_input()
+
+
+class survey_survey(osv.osv):
+	_name = "survey.survey"
+	_inherit = "survey.survey"
+
+	_columns = {
+		'opportunity_ids': fields.one2many('sale.order','survey_id','Opportunity'),
+		}
+
+survey_survey()
 
 class sale_order(osv.osv):
 	_name = "sale.order"
@@ -47,6 +67,8 @@ class sale_order(osv.osv):
 	        'pricelist_id': fields.many2one('product.pricelist', 'Pricelist', required=True, readonly=True,\
 				 help="Pricelist for current sales order."),
 		'discount_ok': fields.boolean('Discount OK',readonly=True),
+		'survey_input_id': fields.one2many('survey.user_input','opportunity_id','Survey Input'),
+		'survey_id': fields.many2one('survey.survey','Survey'),
 		}
 
 
@@ -81,7 +103,17 @@ class sale_order(osv.osv):
         	# self.signal_workflow(cr, uid, ids, 'quotation_sent')
 	        return self.pool['report'].get_action(cr, uid, ids, 'sba_sales.report_saleorder_sba', context=context)
 			
-	
+
+	def action_button_confirm(self, cr, uid, ids, context=None):
+		survey_id = self.pool.get('survey.survey').search(cr,uid,[('res_model','=','sales')])
+		if survey_id:
+			if isinstance(survey_id,list):
+				survey_id = survey_id[0]
+			vals_sale_order = {
+				'survey_id': survey_id
+				}
+			return_id = self.write(cr,uid,ids,vals_sale_order)
+		return super(sale_order,self).action_button_confirm(cr,uid,ids,context)
 		
         def create(self, cr, uid, vals, context=None):
 		if vals['add_disc'] < 0.01:

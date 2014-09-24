@@ -21,6 +21,39 @@ class crm_lead(osv.osv):
         	    return False
 	        return True
 
+	def create(self, cr, uid, vals, context=None):
+                opportunity_id = super(crm_lead, self).create(cr, uid, vals, context=context)
+                if 'date_deadline' in vals.keys():
+			alarm_id = self.pool.get('calendar.alarm').search(cr,uid,[('name','=','1 day mail')])
+			if not alarm_id:
+				alarm_id = [1]	
+			vals_event = {
+				'allday': True,
+				'start_date': vals['date_deadline'],
+				'stop_date': vals['date_deadline'],
+				'state': 'open',
+				'description': 'Vencimiento oportunidad ' + vals['name'] + '\nMonto estimado: ' + str(vals['planned_revenue'] or 0),
+				'name': vals['name'],
+				'opportunity_id': opportunity_id,
+				'alarm_id': [(6,0,alarm_id)],
+				}	
+			event_id = self.pool.get('calendar.event').create(cr,uid,vals_event)
+		return opportunity_id
+
+	def write(self, cr, uid, ids, vals, context=None):
+                return_id = super(crm_lead, self).write(cr, uid, ids, vals, context=context)
+                if 'date_deadline' in vals.keys():
+			for opportunity_id in ids:
+				event_id = self.pool.get('calendar.event').search(cr,uid,[('opportunity_id','=',opportunity_id)])
+				vals_event = {
+					'start_date': vals['date_deadline'],
+					'stop_date': vals['date_deadline'],
+					}
+				if event_id:
+					event_id = self.pool.get('calendar.event').write(cr,uid,event_id,vals_event)
+		return return_id
+
+
 	_constraints = [
         	(_check_date, 'Deadline should be higher than next action date.', ['date_deadline']),
 	    ]
