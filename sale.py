@@ -3,6 +3,7 @@ from openerp.tools.translate import _
 from datetime import date
 from datetime import datetime
 import string
+import urlparse
 
 class sale_stockout(osv.osv):
 	_name = "sale.stockout"
@@ -38,15 +39,15 @@ class sale_stockout(osv.osv):
 
 sale_stockout()
 
-class survey_input(osv.osv):
-	_name = "survey.user_input"
-	_inherit = "survey.user_input"
+#class survey_input(osv.osv):
+#	_name = "survey.user_input"
+#	_inherit = "survey.user_input"
 
-	_columns = {
-		'opportunity_id': fields.many2one('sale.order','Opportunity'),
-		}
+#	_columns = {
+#		'order_id': fields.many2one('sale.order','Sale Order'),
+#		}
 
-survey_input()
+#survey_input()
 
 
 class survey_survey(osv.osv):
@@ -54,7 +55,7 @@ class survey_survey(osv.osv):
 	_inherit = "survey.survey"
 
 	_columns = {
-		'opportunity_ids': fields.one2many('sale.order','survey_id','Opportunity'),
+		'order_ids': fields.one2many('sale.order','survey_id','Sale Order'),
 		}
 
 survey_survey()
@@ -67,7 +68,7 @@ class sale_order(osv.osv):
 	        'pricelist_id': fields.many2one('product.pricelist', 'Pricelist', required=True, readonly=True,\
 				 help="Pricelist for current sales order."),
 		'discount_ok': fields.boolean('Discount OK',readonly=True),
-		'survey_input_id': fields.one2many('survey.user_input','opportunity_id','Survey Input'),
+		# 'survey_input_id': fields.one2many('survey.user_input','opportunity_id','Survey Input'),
 		'survey_id': fields.many2one('survey.survey','Survey'),
 		}
 
@@ -104,15 +105,78 @@ class sale_order(osv.osv):
 	        return self.pool['report'].get_action(cr, uid, ids, 'sba_sales.report_saleorder_sba', context=context)
 			
 
+	def send_survey(self, cr, uid, survey_id, partner_id, context=None):
+		
+		ir_model_data = self.pool.get('ir.model.data')
+        	templates = ir_model_data.get_object_reference(cr, uid,
+                                'survey', 'email_template_survey')
+	        template_id = templates[1] if len(templates) > 0 else False
+
+		survey = self.pool.get('survey.survey').browse(cr,uid,survey_id)
+		
+        	survey_response_obj = self.pool.get('survey.user_input')
+	        partner_obj = self.pool.get('res.partner')
+		partner = partner_obj.browse(cr,uid,partner_id)
+        	mail_mail_obj = self.pool.get('mail.mail')
+	        try:
+        	    model, anonymous_id = self.pool.get('ir.model.data').get_object_reference(cr, uid, 'portal', 'group_anonymous')
+	        except ValueError:
+        	    anonymous_id = None
+
+		def create_response_and_send_mail(token, partner_id, email):
+	            """ Create one mail by recipients and replace __URL__ by link with identification token """
+        	    #set url
+	            url = survey.public_url
+        	    # url = urlparse.urlparse(url).path[1:]  # dirty hack to avoid incorrect urls
+		    template_id = self.pool.get('email.template').search(cr,uid,[('model','=','survey.survey')])
+		    template = self.pool.get('email.template').browse(cr,uid,template_id)
+		    body = template.body_html
+	            if token:
+        	        url = url + '/' + token
+
+	            # post the message
+        	    values = {
+                	'model': None,
+	                'res_id': None,
+        	        'subject': template.subject,
+                	'body': body.replace("__URL__", url),
+	                'body_html': body.replace("__URL__", url),
+        	        'parent_id': None,
+                	'partner_ids': partner_id and [(4, partner_id)] or None,
+	                'notified_partner_ids': partner_id and [(4, partner_id)] or None,
+	                'email_from': 'info@sba.org' or None,
+        	        'email_to': partner.email,
+		            }
+	            mail_id = mail_mail_obj.create(cr, uid, values, context=context)
+        	    mail_mail_obj.send(cr, uid, [mail_id], context=context)
+
+	        def create_token(partner_id, email):
+        	    if context.get("survey_resent_token"):
+                	response_ids = survey_response_obj.search(cr, uid, [('survey_id', '=', survey_id), ('state', 'in', ['new', 'skip']), '|', ('partner_id', '=', partner_id), ('email', '=', email)], context=context)
+	                if response_ids:
+        	            return survey_response_obj.read(cr, uid, response_ids, ['token'], context=context)[0]['token']
+        	        token = uuid.uuid4().__str__()
+                	# create response with token
+	                survey_response_obj.create(cr, uid, {
+        	            'survey_id': survey_id,
+                	    'deadline': datetime.now(),
+	                    'date_create': datetime.now(),
+        	            'type': 'link',
+                	    'state': 'new',
+	                    'token': token,
+        	            'partner_id': partner_id,
+                	    'email': email})
+	                return token
+
+               	token = create_token(partner_id, partner.email)
+	        create_response_and_send_mail(token, partner_id, partner.email)
+
+		return True
+		
 	def action_button_confirm(self, cr, uid, ids, context=None):
-		survey_id = self.pool.get('survey.survey').search(cr,uid,[('res_model','=','sales')])
-		if survey_id:
-			if isinstance(survey_id,list):
-				survey_id = survey_id[0]
-			vals_sale_order = {
-				'survey_id': survey_id
-				}
-			return_id = self.write(cr,uid,ids,vals_sale_order)
+		obj = self.browse(cr,uid,ids)
+		if obj.survey_id:
+			return_survey = self.send_survey(cr,uid,obj.survey_id.id,obj.partner_id.id,context)		
 		return super(sale_order,self).action_button_confirm(cr,uid,ids,context)
 		
         def create(self, cr, uid, vals, context=None):

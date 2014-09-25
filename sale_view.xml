@@ -46,6 +46,9 @@
 			<field name="pricelist_id" position="after">
 				<field name="discount_ok" />
 			</field>
+			<field name="company_id" position="after">
+				<field name="survey_id" />
+			</field>
 			<xpath
 	                        expr="//field[@name='order_line']/tree//field[@name='price_unit']" position="after">
 	                         <field name="list_price_perunit" string="Precio c/dto"/>
