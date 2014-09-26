@@ -50,7 +50,7 @@ class crm_lead_user_assign(osv.osv_memory):
 		    'type': 'notification',
 		    'subject': "Se le acaba de asignar una oportunidad",
 		    'body': "Se le asigno a oportunidad "+name,
-		    'partner_ids': [obj.user_id.id],
+		    'partner_ids': [(4,obj.user_id.partner_id.id)],
 		    }
 
 		msg_obj = self.pool.get('mail.message')
