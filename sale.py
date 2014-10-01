@@ -180,14 +180,8 @@ class sale_order(osv.osv):
 		return super(sale_order,self).action_button_confirm(cr,uid,ids,context)
 		
         def create(self, cr, uid, vals, context=None):
-		if vals['add_disc'] < 0.01:
-			vals['discount_ok'] = True
-		else:
-			vals['discount_ok'] = False
+		vals['discount_ok'] = vals.get('add_disc', 0.0) < 0.01
         	return super(sale_order, self).create(cr, uid, vals, context=context)
-		# if not vals['discount_ok']:
-		#	raise osv.except_osv(('Warning!'), ("El descuento necesita ser aprobado"))
-
 
         def write(self, cr, uid, ids, vals, context=None):
 		if ids:
