@@ -231,9 +231,32 @@ class sale_order(osv.osv):
 		if obj.add_disc < 0.01:
 			return True
 		user_obj = self.pool.get('res.users').browse(cr,uid,uid)
+		"""
+		Control por warehouse
 		warehouse_id = self.pool.get('res.partner').browse(cr,uid,user_obj.partner_id.id).warehouse_id
 		if obj.warehouse_id != warehouse_id:
 			return False
+		"""
+		company_team_id = self.pool.get('crm.case.section').search(cr,uid,[('parent_id','=',None)])
+		if len(company_team_id) > 1:
+			raise osv.except_osv('Error', 'El sistema solo debe tener configurado el salesteam a nivel empresa')
+                        return False
+
+		if not company_team_id:
+			raise osv.except_osv('Error', 'El sistema no tiene configurado el salesteam a nivel empresa')
+                        return False
+		company_team = self.pool.get('crm.case.section').browse(cr,uid,company_team_id)
+		if uid != company_team.user_id.id:
+			company_group = self.pool.get('crm.case.section').browse(cr,uid,obj.section_id.id)
+			if uid not in company_group.member_ids:
+				raise osv.except_osv('Error','El usuario no esta incluido en el grupo de ventas para aprobar el pedido')
+				return False
+			else:
+				if company_group.user_id.id != uid:
+					raise osv.except_osv('Error','El usuario no esta habilitado en el grupo de ventas para aprobar el pedido')
+					return False
+
+		import pdb;pdb.set_trace()
 	        config_adddisc = 0
         	config_credit_tolerance = 0
 	        config_disc_level1 = 0

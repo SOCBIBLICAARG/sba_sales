@@ -35,6 +35,15 @@ class res_user(osv.osv):
 		}
 res_user()
 
+class res_partner_category(osv.osv):
+	_name = "res.partner.category"
+	_inherit = "res.partner.category"
+
+	_columns = {
+		'pricelist_id': fields.many2one('product.pricelist',string="Pricelist"),
+		}
+res_partner_category()
+
 class res_partner(osv.osv):
 	_name = "res.partner"
 	_inherit = "res.partner"
@@ -103,6 +112,12 @@ class res_partner(osv.osv):
 	    if 'user_id' in vals:
 		if vals['user_id']:
 			vals['payment_responsible_id'] = vals['user_id']
+	    if 'category_id' in vals:
+		if vals['category_id']:
+			for value in vals['category_id'][0][2]:
+				pricelist_id = self.pool.get('res.partner.category').browse(cr,uid,value).pricelist_id.id
+				if pricelist_id:
+					vals['property_product_pricelist'] = pricelist_id
             return super(res_partner, self).write(cr, uid, ids, vals, context=context)
 
         def create(self, cr, uid, vals, context=None):
@@ -120,6 +135,12 @@ class res_partner(osv.osv):
 			vals['payment_responsible_id'] = vals['user_id']
 	    if not 'date' in vals:
 		vals['date'] = date.today()
+	    if 'category_id' in vals:
+		if vals['category_id']:
+			for value in vals['category_id'][0][2]:
+				pricelist_id = self.pool.get('res.partner.category').browse(cr,uid,value).pricelist_id.id
+				if pricelist_id:
+					vals['property_product_pricelist'] = pricelist_id
             return super(res_partner, self).create(cr, uid, vals, context=context)
 	
 res_partner()
