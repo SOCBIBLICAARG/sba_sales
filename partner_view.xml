@@ -43,6 +43,22 @@
 	    </field>
 	</record>
 
+	<record model="ir.ui.view" id="partner_category_form_view">
+	    <field name="name">res.partner.category.form.inherit</field>
+	    <field name="model">res.partner.category</field>
+	    <field name="inherit_id" ref="base.view_partner_category_form" />
+	    <field name="arch" type="xml">
+	        <data>
+			<field name="parent_id" position="after">
+			   <group colspan="2">
+				<field name="pricelist_id" /> 
+			   </group>
+			</field>
+		</data>
+	    </field>
+	</record>
+
+
 	<record model="ir.ui.view" id="partner_sba_form_view">
 	    <field name="name">res.partner.sba.form.inherit</field>
 	    <field name="model">res.partner</field>
@@ -53,7 +69,7 @@
 				<page string="SBA">
 				   <group colspan="2">
 					<field name="region" /> 
-					<field name="canal" /> 
+					<field name="canal" invisible="1"/> 
 					<field name="correlativo" /> 
 					<field name="cod_epicor" /> 
 					<field name="warehouse_id" /> 
@@ -61,6 +77,9 @@
 				</page>
 			</notebook>
 			<field name="property_account_position"  position="replace"/>
+			<field name="property_product_pricelist" position="attributes">
+                                    <attribute name="readonly">1</attribute>
+			</field>
 		</data>
 	    </field>
 	</record>
@@ -142,6 +161,39 @@
         </record>
 
         <menuitem id="menu_sba_canal_id" name="Canales" parent="base.menu_sales" sequence="20" action="action_canal_form" />
+
+        <record id="partner_category_tree_view" model="ir.ui.view">
+            <field name="name">partner.category.tree</field>
+            <field name="model">res.partner</field>
+            <field name="arch" type="xml">
+                <tree string="Partner Categories">
+		    <field name="category_id">
+	                    <field name="name"/>
+		    </field>
+                </tree>
+            </field>
+        </record>
+        <record id="partner_category_action" model="ir.actions.act_window">
+            <field name="name">Partners by Category</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">res.partner</field>
+            <!-- field name="domain">[('parent_id','=',False)]</field -->
+            <field name="view_type">tree</field>
+            <field name="view_id" ref="partner_category_tree_view"/>
+            <field name="help" type="html">
+              <p>
+                Here is a list of all your partners classified by category. You
+                can click a category to get the list of all partners linked to
+                this category or to a child of this category.
+              </p>
+            </field>
+        </record>
+        <menuitem
+            action="partner_category_action"
+            id="menu_partners_category"
+            parent="base.menu_sales"
+            sequence="100" />
+
 
 
     </data>
