@@ -5,6 +5,16 @@ from datetime import datetime
 import string
 import urlparse
 
+class crm_case_section(osv.Model):
+    _inherit = 'crm.case.section'
+
+    _columns = {
+        'discount': field.float('Approval Discount'),
+        'credit_tolerance': field.float('Approbal Credit Tolerance'),
+    }
+
+crm_case_section()
+
 class sale_stockout(osv.osv):
 	_name = "sale.stockout"
 	_description = "Modelo con los productos que tuvieron stockout durante la confirmacion del pedido"
@@ -220,177 +230,31 @@ class sale_order(osv.osv):
 
 	def approve_discount(self, cr, uid, ids, context=None):
 		vals = {
-			'discount_ok': self.approve_discount_so(cr,uid,ids),
+			'discount_ok': self.approve_discount_so(cr,uid,[ids])[ids],
 			'state': 'sent',
 			}
 		self.write(cr,uid,ids,vals)
 
 	def approve_discount_so(self, cr, uid, ids, context=None):
+                r = {}
+                for so in self.browse(cr, uid, ids, context=context):
+                    team = so.section_id
+                    
+                    while team and team.user_id != uid:
+                        team = team.parent_id
 
-        	obj = self.browse(cr, uid, ids[0], context=context)
-		if obj.add_disc < 0.01:
-			return True
-		user_obj = self.pool.get('res.users').browse(cr,uid,uid)
-		"""
-		Control por warehouse
-		warehouse_id = self.pool.get('res.partner').browse(cr,uid,user_obj.partner_id.id).warehouse_id
-		if obj.warehouse_id != warehouse_id:
-			return False
-		"""
-		company_team_id = self.pool.get('crm.case.section').search(cr,uid,[('parent_id','=',None)])
-		if len(company_team_id) > 1:
-			raise osv.except_osv('Error', 'El sistema solo debe tener configurado el salesteam a nivel empresa')
-                        return False
+                    if not team:
+                        """ No es responsable de ningun equipo """
+                        discount = 0
+                        credit_tolerance = 0
+                    else:
+                        """ Es responsable de un equipo """
+                        discount = team.discount
+                        credit_tolerance = team.credit_tolerance
 
-		if not company_team_id:
-			raise osv.except_osv('Error', 'El sistema no tiene configurado el salesteam a nivel empresa')
-                        return False
-		company_team = self.pool.get('crm.case.section').browse(cr,uid,company_team_id)
-		if uid != company_team.user_id.id:
-			company_group = self.pool.get('crm.case.section').browse(cr,uid,obj.section_id.id)
-			if uid not in company_group.member_ids:
-				raise osv.except_osv('Error','El usuario no esta incluido en el grupo de ventas para aprobar el pedido')
-				return False
-			else:
-				if company_group.user_id.id != uid:
-					raise osv.except_osv('Error','El usuario no esta habilitado en el grupo de ventas para aprobar el pedido')
-					return False
+                    r[so.id] = so.add_disc <= discount and so.partner_id.credit <= credit_toleance:
 
-		import pdb;pdb.set_trace()
-	        config_adddisc = 0
-        	config_credit_tolerance = 0
-	        config_disc_level1 = 0
-        	config_disc_level2 = 0
-	        config_disc_level3 = 0
-        	config_grupo_aprob1 = ''
-	        config_grupo_aprob2 = ''
-        	config_grupo_aprob3 = ''
-	        config_ids = self.pool.get('ir.config_parameter').search(cr, uid, [('key', 'like', 'SBA')])
-        	if config_ids:
-	            for config in self.pool.get('ir.config_parameter').browse(cr, uid, config_ids):
-        	        if config.key == 'SBA_DESCUENTO_NIVEL1':
-                	    config_disc_level1 = float(config.value)
-	                if config.key == 'SBA_DESCUENTO_NIVEL2':
-        	            config_disc_level2 = float(config.value)
-                	if config.key == 'SBA_DESCUENTO_NIVEL3':
-	                    config_disc_level3 = float(config.value)
-        	        if config.key == 'SBA_GRUPO_APROB_1':
-                	    config_grupo_aprob1 = config.value
-	                if config.key == 'SBA_GRUPO_APROB_2':
-        	            config_grupo_aprob2 = config.value
-                	if config.key == 'SBA_GRUPO_APROB_3':
-	                    config_grupo_aprob3 = config.value
-        	        if config.key == 'SBA_GRUPO_VENTAS':
-                	    config_grupo_ventas = config.value
-	                if config.key == 'SBA_TOLERANCIA_CREDITO1':
-        	            config_credit_tolerance1 = float(config.value)
-                	if config.key == 'SBA_TOLERANCIA_CREDITO2':
-	                    config_credit_tolerance2 = float(config.value)
-        	        if config.key == 'SBA_TOLERANCIA_CREDITO3':
-                	    config_credit_tolerance3 = float(config.value)
-
-	        user_groups = {}
-	
-        	group_ventas_id = self.pool.get('res.groups').search(cr, uid, [('name', '=', config_grupo_ventas)])
-	        group_aprob1_id = self.pool.get('res.groups').search(cr, uid, [('name', '=', config_grupo_aprob1)])
-        	group_aprob2_id = self.pool.get('res.groups').search(cr, uid, [('name', '=', config_grupo_aprob2)])
-	        group_aprob3_id = self.pool.get('res.groups').search(cr, uid, [('name', '=', config_grupo_aprob3)])
-        	user_groups['grupo_ventas'] = group_ventas_id
-	        user_groups['group_aprob1'] = group_aprob1_id
-        	user_groups['group_aprob2'] = group_aprob2_id
-	        user_groups['group_aprob3'] = group_aprob3_id
-        	user_list_aprob1 = self.pool.get('res.groups').read(cr, uid, group_aprob1_id, ['users'])
-	        user_list_aprob2 = self.pool.get('res.groups').read(cr, uid, group_aprob2_id, ['users'])
-        	user_list_aprob3 = self.pool.get('res.groups').read(cr, uid, group_aprob3_id, ['users'])
-		# If UID is director, return True
-               	for user_group in user_list_aprob3:
-	        	if uid in user_group['users']:
-				return True
-		# otherwise...
-	        return_value = True
-        	if obj.add_disc <= config_disc_level1:
-                	return_value = True
-			return return_value
-	        elif obj.add_disc >= config_disc_level1 and obj.add_disc < config_disc_level2:
-        	        return_flag_level1 = False
-                	return_flag_level2 = False
-	                for user_group in user_list_aprob1:
-        	            if uid in user_group['users']:
-                	        return_flag_level1 = True
-
-	                for user_group in user_list_aprob2:
-        	            if uid in user_group['users']:
-        	                return_flag_level2 = True
-	
-                	return_value = return_flag_level1 or return_flag_level2
-			return return_value
-	        elif obj.add_disc >= config_disc_level2 and obj.add_disc < config_disc_level3:
-        	        return_flag_level2 = False
-                	for user_group in user_list_aprob2:
-	                    if uid in user_group['users']:
-        	                return_flag_level2 = True
-
-	                return_value = return_flag_level2
-		elif obj.add_disc > config_disc_level3:
-        	        return_flag_level3 = False
-                	for user_group in user_list_aprob3:
-	                    if uid in user_group['users']:
-        	                return_flag_level3 = True
-
-	                return_value = return_flag_level3
-			return return_value
-        	if not return_value:
-                	return False
-	        if obj.partner_id.credit == 0:
-        	        return True
-	        total_check_1 = obj.partner_id.credit_limit * (1 + config_credit_tolerance1 / 100) - (obj.amount_total + obj.partner_id.credit)
-        	total_check_2 = obj.partner_id.credit_limit * (1 + config_credit_tolerance2 / 100) - (obj.amount_total + obj.partner_id.credit)
-	        total_check_3 = obj.partner_id.credit_limit * (1 + config_credit_tolerance3 / 100) - (obj.amount_total + obj.partner_id.credit)
-        	if total_check_1 < 0 and total_check_2 > 0:
-                	return_flag_level1 = False
-	                return_flag_level2 = False
-        		for user_group in user_list_aprob1:
-                	    if uid in user_group['users']:
-                        	return_flag_level1 = True
-
-	                for user_group in user_list_aprob2:
-        	            if uid in user_group['users']:
-                	        return_flag_level2 = True
-
-	                return_value = return_flag_level1 or return_flag_level2
-        	        if not return_value:
-                	    raise osv.except_osv('Error', 'El cliente supera su limite de credito por ' + str(total_check_1 * -1) + '$')
-	                    return False
-        	        else:
-                	    return True
-	        if total_check_2 < 0 and total_check_3 > 0:
-        	        return_flag_level1 = False
-	                return_flag_level2 = False
-        	        for user_group in user_list_aprob2:
-                	    if uid in user_group['users']:
-                        	return_flag_level1 = True
-
-	                for user_group in user_list_aprob3:
-        	            if uid in user_group['users']:
-                	        return_flag_level2 = True
-
-	                return_value = return_flag_level1 or return_flag_level2
-        	        if not return_value:
-                	    raise osv.except_osv('Error', 'El cliente supera su limite de credito por ' + str(total_check_1 * -1) + '$')
-	                    return False
-        	        else:
-                	    return True
-	        if total_check_3 < 0:
-        	        return_flag_level = False
-                	for user_group in user_list_aprob3:
-	                    if uid in user_group['users']:
-        	                return_flag_level = True
-
-                	if not return_flag_level:
-	                    raise osv.except_osv('Error', 'El cliente supera su limite de credito por ' + str(total_check_3 * -1) + '$')
-        	            return False
-	                else:
-			    return True
+                return r
 
 sale_order()
 
