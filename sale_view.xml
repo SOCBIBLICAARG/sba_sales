@@ -5,16 +5,16 @@
 	<record id="view_saleorder_filter_inh" model="ir.ui.view">
         	<field name="name">Sale Team</field>
 	        <field name="model">crm.case.section</field>
-		<field name="inherit_id" ref="sale.view_quotation_tree" />
+		<field name="inherit_id" ref="sales_team.crm_case_section_view_form" />
 	        <field name="arch" type="xml">
-			<page string="Notes" position="before">
+			<notebook position="inside">
 				<page string="Approval Limits">
 					<group>
 						<field name="discount"/>
 						<field name="credit_tolerance"/>
 					</group>
 				</page>
-			</page>
+			</notebook>
 		</field>
 	</record>
 
