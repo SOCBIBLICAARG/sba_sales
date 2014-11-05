@@ -9,8 +9,8 @@ class crm_case_section(osv.Model):
     _inherit = 'crm.case.section'
 
     _columns = {
-        'discount': field.float('Approval Discount'),
-        'credit_tolerance': field.float('Approbal Credit Tolerance'),
+        'discount': fields.float('Approval Discount'),
+        'credit_tolerance': fields.float('Approbal Credit Tolerance'),
     }
 
 crm_case_section()
