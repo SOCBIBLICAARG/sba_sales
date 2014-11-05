@@ -252,7 +252,7 @@ class sale_order(osv.osv):
                         discount = team.discount
                         credit_tolerance = team.credit_tolerance
 
-                    r[so.id] = so.add_disc <= discount and so.partner_id.credit <= credit_toleance:
+                    r[so.id] = so.add_disc <= discount and so.partner_id.credit <= credit_toleance
 
                 return r
 
