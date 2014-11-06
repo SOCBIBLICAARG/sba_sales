@@ -1,0 +1,8 @@
+-
+ Cliente 0
+-
+ !record { model: res.partner, id: partner_0 }:
+   name: Partner 0
+   document_type_id: l10n_ar_invoice.dt_CUIT
+   document_number: 20000000001
+

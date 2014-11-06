@@ -1,0 +1,55 @@
+-
+ Asigno al operador de oportunidades y ventas al usuario de ventas. 
+-
+  !context
+    uid: 'res_users_salesman_user'
+
+-
+ Creamos una nueva iniciativa.
+-
+  !record {model: crm.lead, id: test_crm_lead_new}:
+    type: 'lead'
+    name: 'Iniciativa para probar'
+    partner_id: partner_0
+    description: Descripcion de la nueva oportunidad 
+    section_id: saleteam_local
+
+-
+  Vemos el estado inicial de la iniciativa..
+-
+  !python {model: crm.lead}: |
+    del context['uid']
+    stage = self.pool.get('crm.case.stage').search_read(cr,uid,[('sequence','=',1)],['id'],context)[0]
+    lead = self.browse(cr, uid, ref('test_crm_lead_new'))
+    stage_id = self.stage_find(cr, uid , [lead], lead.section_id.id or False,[], context)
+    assert stage_id == stage['id'], "Default stage of lead is incorrect!"
+
+-
+  Lo convertimos en oportunidad.
+-
+  !python {model: crm.lead}: |
+    self.convert_opportunity(cr, uid ,[ref("test_crm_lead_new")], ref("partner_0"))
+
+-
+  Vemos si continua teniendo el mismo Stage.
+-
+  !python {model: crm.lead}: |
+    stage = self.pool.get('crm.case.stage').search_read(cr,uid,[('sequence','=',1)],['id'],context)[0]
+    opp = self.browse(cr, uid, ref('test_crm_lead_new'))
+    stage_id = self.stage_find(cr, uid , [opp], opp.section_id.id or False,[], context)
+    assert stage_id == stage['id'], "Default stage of opportunity is incorrect!"
+
+-
+  Ahora ganamos la oportunidad.
+-
+  !python {model: crm.lead}: |
+    self.case_mark_won(cr, uid, [ref("test_crm_lead_new")])
+
+-
+  Nos aseguramos que ganamos la oportunidad.
+-
+  !python {model: crm.lead}: |
+    opp = self.browse(cr, uid, ref('test_crm_lead_new'))
+    stage_id = self.stage_find(cr, uid , [opp], opp.section_id.id or False,[('probability','=',100.0)], context)
+    assert stage_id == opp.stage_id.id, "Stage of opportunity is incorrect!"
+

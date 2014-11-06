@@ -1,0 +1,6 @@
+-
+ Producto 0
+-
+ !record { model: product.product, id: product_0 }:
+    name: Product 0
+

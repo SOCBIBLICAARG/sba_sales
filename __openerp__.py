@@ -45,6 +45,11 @@
     ],
     'demo_xml': [],
     'test':[
+        'tests/users.yml',
+        'tests/sale_teams.yml',
+        'tests/products.yml',
+        'tests/partners.yml',
+        'tests/lead2oportunity2win.yml',
     ],
     'installable': True,
 }
