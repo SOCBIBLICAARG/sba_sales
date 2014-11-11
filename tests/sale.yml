@@ -1,1 +1,32 @@
+-
+ Asigno al operador de oportunidades y ventas al usuario de ventas. 
+-
+  !context
+    uid: 'res_users_salesman_user'
+-
+  Tomo el presupuesto generado desde la oportunidad.
+  Esta forma extraña de hacerlo es porque las entidadas creadas 
+  fueras del YAML no le son asignadas el xml_id. Aquí le estoy
+  forzando el xml_id sba_sales.sale_order_from_lead.
+-
+  !python {model: crm.lead}: |
+    crm = self.browse(cr, uid, ref("test_crm_lead_new"))
+    ir_model_data = self.pool.get('ir.model.data')
+    ir_model_data.create(cr, 1, {
+                'model': crm.ref._name,
+                'res_id': crm.ref.id,
+                'module': 'sba_sales',
+                'name': 'sale_order_from_lead',
+            })
 
+-
+  Agrego lineas de productos al presupuesto.
+-
+  !record {model: sale.order, id: sale_order_from_lead}:
+    order_line:
+       - product_id: product_0
+         count: 3
+         partner_id: 
+       - product_id: product_1
+         count: 10
+         partner_id:

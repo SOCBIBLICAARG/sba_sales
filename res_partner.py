@@ -56,18 +56,17 @@ class res_partner(osv.osv):
             return True
 
         def _check_null_values(self, cr, uid, ids, context=None):
-            obj = self.browse(cr, uid, ids[0], context=context)
-	    if obj.supplier and obj.is_company:
-	            if (not obj.name) or (not obj.city) or (not obj.street) or (not obj.zip) or (not obj.email) \
-			or (not obj.document_number) or (not obj.document_type_id): 
-        	        return False
-	    if obj.customer and obj.is_company:
-	            if (not obj.name) or (not obj.city) or (not obj.street) or (not obj.user_id) or (not obj.zip) or (not obj.email) \
-			or (not obj.document_number) or (not obj.document_type_id) or (not obj.property_payment_term) \
-			or (not obj.region) or (not obj.canal):
-        	        return False
+            for obj in self.browse(cr, uid, ids, context=context):
+                if obj.supplier and obj.is_company:
+                    if (not obj.name) or (not obj.city) or (not obj.street) or (not obj.zip) or (not obj.email) \
+                        or (not obj.document_number) or (not obj.document_type_id): 
+                        return False
+                if obj.customer and obj.is_company:
+                    if (not obj.name) or (not obj.city) or (not obj.street) or (not obj.user_id) or (not obj.zip) or (not obj.email) \
+                        or (not obj.document_number) or (not obj.document_type_id) or (not obj.property_payment_term) \
+                        or (not obj.region) or (not obj.canal):
+                        return False
             return True
-
 
         def _update_warning_msgs(self,cr,uid,ids=None,context=None):
 	    partner_ids = self.search(cr,uid,[('credit','>',0)])
@@ -109,9 +108,6 @@ class res_partner(osv.osv):
             if 'city' in vals:
 		if vals['city']:
 		        vals['city'] = vals['city'].upper()
-	    if 'user_id' in vals:
-		if vals['user_id']:
-			vals['payment_responsible_id'] = vals['user_id']
 	    if 'category_id' in vals:
 		if vals['category_id']:
 			for value in vals['category_id'][0][2]:
@@ -130,9 +126,6 @@ class res_partner(osv.osv):
             if 'city' in vals:
 		if vals['city']:
 		        vals['city'] = vals['city'].upper()
-	    if 'user_id' in vals:
-		if vals['user_id']:
-			vals['payment_responsible_id'] = vals['user_id']
 	    if not 'date' in vals:
 		vals['date'] = date.today()
 	    if 'category_id' in vals:

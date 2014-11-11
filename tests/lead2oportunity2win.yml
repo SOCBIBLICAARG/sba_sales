@@ -10,7 +10,7 @@
   !record {model: crm.lead, id: test_crm_lead_new}:
     type: 'lead'
     name: 'Iniciativa para probar'
-    partner_id: partner_0
+    partner_id: contacto_0
     description: Descripcion de la nueva oportunidad 
     section_id: saleteam_local
 
@@ -23,28 +23,29 @@
     lead = self.browse(cr, uid, ref('test_crm_lead_new'))
     stage_id = self.stage_find(cr, uid , [lead], lead.section_id.id or False,[], context)
     assert stage_id == stage['id'], "Default stage of lead is incorrect!"
-
 -
-  Lo convertimos en oportunidad.
+  Abrimos el wizard para convertir una iniciativa en una oportunidad.
 -
-  !python {model: crm.lead}: |
-    self.convert_opportunity(cr, uid ,[ref("test_crm_lead_new")], ref("partner_0"))
-
+  !record {model: crm.lead2opportunity.partner, id: lead2opportunity_wiz, context: '{ "active_id": ref("test_crm_lead_new"), "active_ids": [ref("test_crm_lead_new")], "active_model": "crm.lead" }' }:
+    name: 'convert'
 -
-  Vemos si continua teniendo el mismo Stage.
+  Ejecutamos la conversión a oportunidad.
+-
+  !python {model: crm.lead2opportunity.partner}: |
+    self.action_apply(cr, uid, [ref("lead2opportunity_wiz")], context={ "active_id": ref("test_crm_lead_new"), "active_ids": [ref("test_crm_lead_new")], "active_model": "crm.lead" })
+-
+  Vemos si la iniciativa continua teniendo el mismo Stage.
 -
   !python {model: crm.lead}: |
     stage = self.pool.get('crm.case.stage').search_read(cr,uid,[('sequence','=',1)],['id'],context)[0]
     opp = self.browse(cr, uid, ref('test_crm_lead_new'))
     stage_id = self.stage_find(cr, uid , [opp], opp.section_id.id or False,[], context)
     assert stage_id == stage['id'], "Default stage of opportunity is incorrect!"
-
 -
   Ahora ganamos la oportunidad.
 -
   !python {model: crm.lead}: |
     self.case_mark_won(cr, uid, [ref("test_crm_lead_new")])
-
 -
   Nos aseguramos que ganamos la oportunidad.
 -
@@ -52,4 +53,3 @@
     opp = self.browse(cr, uid, ref('test_crm_lead_new'))
     stage_id = self.stage_find(cr, uid , [opp], opp.section_id.id or False,[('probability','=',100.0)], context)
     assert stage_id == opp.stage_id.id, "Stage of opportunity is incorrect!"
-
