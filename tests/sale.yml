@@ -20,6 +20,12 @@
             })
 
 -
+  Verifico que se haya asignado correctamente el xml_id
+-
+  !assert {model: sale.order, id: sale_order_from_lead}:
+    name: Pepe
+    partner_id: 10
+-
   Agrego lineas de productos al presupuesto.
 -
   !record {model: sale.order, id: sale_order_from_lead}:
