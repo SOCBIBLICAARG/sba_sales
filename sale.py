@@ -184,10 +184,11 @@ class sale_order(osv.osv):
 		return True
 		
 	def action_button_confirm(self, cr, uid, ids, context=None):
-		obj = self.browse(cr,uid,ids)
-		if obj.survey_id:
-			return_survey = self.send_survey(cr,uid,obj.survey_id.id,obj.partner_id.id,context)		
-		return super(sale_order,self).action_button_confirm(cr,uid,ids,context)
+            r = super(sale_order,self).action_button_confirm(cr,uid,ids,context)
+            obj = self.browse(cr,uid,ids)
+            if obj.survey_id:
+                    return_survey = self.send_survey(cr,uid,obj.survey_id.id,obj.partner_id.id,context)		
+            return r
 		
         def create(self, cr, uid, vals, context=None):
 		vals['discount_ok'] = vals.get('add_disc', 0.0) < 0.01
@@ -229,10 +230,9 @@ class sale_order(osv.osv):
 			]
 
 	def approve_discount(self, cr, uid, ids, context=None):
-		vals = {
-			'discount_ok': self.approve_discount_so(cr,uid,[ids])[ids],
-			'state': 'sent',
-			}
+            discount_ok = self.approve_discount_so(cr,uid,ids)
+            for _id in ids:
+		vals = { 'discount_ok': discount_ok[_id] }
 		self.write(cr,uid,ids,vals)
 
 	def approve_discount_so(self, cr, uid, ids, context=None):
@@ -240,7 +240,7 @@ class sale_order(osv.osv):
                 for so in self.browse(cr, uid, ids, context=context):
                     team = so.section_id
                     
-                    while team and team.user_id != uid:
+                    while team and team.user_id.id != uid:
                         team = team.parent_id
 
                     if not team:
@@ -252,7 +252,7 @@ class sale_order(osv.osv):
                         discount = team.discount
                         credit_tolerance = team.credit_tolerance
 
-                    r[so.id] = so.add_disc <= discount and so.partner_id.credit <= credit_toleance
+                    r[so.id] = so.add_disc <= discount and so.partner_id.credit <= credit_tolerance
 
                 return r
 
@@ -264,7 +264,6 @@ class sale_order_line(osv.osv):
 	_inherit = "sale.order.line"
 
 	def onchange_discount(self, cr, uid, ids, discount, context=None):
-		import pdb;pdb.set_trace()
 		obj = self.browse(cr,uid,ids)
 		if obj.discount > discount:
 			res['discount'] = discount
