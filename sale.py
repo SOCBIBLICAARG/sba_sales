@@ -230,31 +230,49 @@ class sale_order(osv.osv):
 			]
 
 	def approve_discount(self, cr, uid, ids, context=None):
-            discount_ok = self.approve_discount_so(cr,uid,ids)
-            for _id in ids:
-		vals = { 'discount_ok': discount_ok[_id] }
-		self.write(cr,uid,ids,vals)
+            user_obj = self.pool.get('res.users')
+            user = user_obj.browse(cr, uid, uid)
+            r = {}
+            for so in self.browse(cr, uid, ids, context=context):
+                team = so.section_id
 
-	def approve_discount_so(self, cr, uid, ids, context=None):
-                r = {}
-                for so in self.browse(cr, uid, ids, context=context):
-                    team = so.section_id
-                    
-                    while team and team.user_id.id != uid:
-                        team = team.parent_id
+                while team and team.user_id.id != uid:
+                    team = team.parent_id
 
-                    if not team:
-                        """ No es responsable de ningun equipo """
-                        discount = 0
-                        credit_tolerance = 0
+                if not team:
+                    """ No es responsable de ningun equipo """
+                    discount = 0
+                    credit_tolerance = 0
+                else:
+                    """ Es responsable de un equipo """
+                    discount = team.discount
+                    credit_tolerance = team.credit_tolerance
+
+                discount_ok = so.add_disc <= discount
+
+                if not discount_ok:
+                    boss = so.section_id.user_id
+
+                    if boss == user:
+                        boss = so.section_id.parent_id.user_id if so.section_id.parent_id else False
+
+                    if not boss:
+                        message_id = self.message_post(cr, uid, [so.id],
+                                                       subject=_('Request action'),
+                                                       body=_('The sale order has not a valid sale team. Assign one.'))
+                        self.pool.get('mail.message').set_message_read(cr, boss.id, [message_id], False)
                     else:
-                        """ Es responsable de un equipo """
-                        discount = team.discount
-                        credit_tolerance = team.credit_tolerance
+                        self.message_subscribe_users(cr, uid, [so.id], user_ids=[boss.id])
+                        message_id = self.message_post(cr, uid, [so.id],
+                                                       subject=_('Request action'),
+                                                       body=_('The user <b>%s</b> tried to approve this sale order, but the user does not have the authorization to approve such discount.\nAn approval request for this sale order has been created for user <b>%s</b>.') % (user.name, boss.name), to_read=True)
+                        self.pool.get('mail.message').set_message_read(cr, boss.id, [message_id], False)
+                else:
+                    self.message_post(cr, uid, [so.id], body=_('The user <b>%s</b> approve this sale order with %4.2f%% discount.') % (user.name, so.add_disc))
 
-                    r[so.id] = so.add_disc <= discount and so.partner_id.credit <= credit_tolerance
+                self.write(cr,uid,so.id, { 'discount_ok': discount_ok })
 
-                return r
+            return { }
 
 sale_order()
 
