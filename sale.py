@@ -92,12 +92,11 @@ class sale_order(osv.osv):
         	'''
 	        This function opens a window to compose an email, with the edi sale template message loaded by default
         	'''
+	        assert len(ids) == 1, 'This option should only be used for a single id at a time'
 		obj = self.browse(cr,uid,ids)
-		if obj:
-			if not self.approve_discount_so(cr,uid,ids) and not obj.discount_ok:
-				raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
-				return None
-			
+                if obj and not obj.discount_ok:
+                        raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
+                        return None
 		return super(sale_order, self).action_quotation_send(cr,uid,ids,context=context)
 
 
@@ -105,12 +104,11 @@ class sale_order(osv.osv):
         	'''
 	        This function prints the sales order and mark it as sent, so that we can see more easily the next step of the workflow
         	'''
-		obj = self.browse(cr,uid,ids)
-		if obj:
-			if not self.approve_discount_so(cr,uid,ids) and not obj.discount_ok:
-				raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
-				return None
 	        assert len(ids) == 1, 'This option should only be used for a single id at a time'
+		obj = self.browse(cr,uid,ids)
+                if obj and not obj.discount_ok:
+                        raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
+                        return None
         	# self.signal_workflow(cr, uid, ids, 'quotation_sent')
 	        return self.pool['report'].get_action(cr, uid, ids, 'sba_sales.report_saleorder_sba', context=context)
 			
