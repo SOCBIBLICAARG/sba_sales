@@ -189,40 +189,28 @@ class sale_order(osv.osv):
             return r
 		
         def create(self, cr, uid, vals, context=None):
-		vals['discount_ok'] = vals.get('add_disc', 0.0) < 0.01
-        	return super(sale_order, self).create(cr, uid, vals, context=context)
+            vals['discount_ok'] = not float(vals.get('add_disc', 0.0)) > 0
+            return super(sale_order, self).create(cr, uid, vals, context=context)
 
         def write(self, cr, uid, ids, vals, context=None):
-		if ids:
-			if 'discount_ok' not in vals.keys() and 'date_confirm' not in vals.keys():
-		                obj = self.browse(cr, uid, ids[0], context=context)
-				# if obj.state in ['draft','sent']:
-				if obj.state in ['draft']:
-					if obj.add_disc < 0.01:
-						vals['discount_ok'] = True
-					else:
-						vals['discount_ok'] = False
-				if 'add_disc' in vals.keys():
-					if vals['add_disc'] < 0.01:
-						vals['discount_ok'] = True
-					else:
-						vals['discount_ok'] = False
+            if ids:
+                    if 'discount_ok' not in vals.keys():
+                            obj = self.browse(cr, uid, ids[0], context=context)
+                            if vals.get('state', obj.state) in ['draft']:
+                                    vals['discount_ok'] = not float(vals.get('add_disc', obj.add_disc)) > 0
 
-        	return super(sale_order, self).write(cr, uid, ids, vals, context=context)
-	#	#if not vals['discount_ok']:
-	#	#	raise osv.except_osv(('Warning!'), ("El descuento necesita ser aprobado"))
+            return super(sale_order, self).write(cr, uid, ids, vals, context=context)
 
 	def _check_validation_sba(self, cr, uid, ids, context = None):
-                obj = self.browse(cr, uid, ids[0], context=context)
-                if obj.state == 'manual' or obj.state == 'sent':
-			if obj.discount_ok:
-				return True
-                	if obj.add_disc < 0.01:
-                        	return True
-			if not obj.discount_ok:
-				return False
-		return True
-
+            obj = self.browse(cr, uid, ids[0], context=context)
+            if obj.state == 'manual' or obj.state == 'sent':
+                    if obj.discount_ok:
+                            return True
+                    if obj.add_disc < 0.01:
+                            return True
+                    if not obj.discount_ok:
+                            return False
+            return True
 
 	_constraints = [(_check_validation_sba, '\n\nUd acaba de otorgar un descuento superior al descuento que se le permite otorgar.\nPor favor, pida a su superior que autorice el pedido', ['add_disc','state']),
 			]
@@ -258,7 +246,7 @@ class sale_order(osv.osv):
                         message_id = self.message_post(cr, uid, [so.id],
                                                        subject=_('Request action'),
                                                        body=_('The sale order has not a valid sale team. Assign one.'))
-                        self.pool.get('mail.message').set_message_read(cr, boss.id, [message_id], False)
+                        self.pool.get('mail.message').set_message_read(cr, user.id, [message_id], False)
                     else:
                         self.message_subscribe_users(cr, uid, [so.id], user_ids=[boss.id])
                         message_id = self.message_post(cr, uid, [so.id],
