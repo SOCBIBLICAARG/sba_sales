@@ -50,10 +50,27 @@
 	    <field name="inherit_id" ref="sale.view_order_form" />
 	    <field name="arch" type="xml">
 	        <data>
+                        <button name="action_quotation_send" position="attributes">
+                            <attribute name="attrs">{'invisible': ['|',('discount_ok','=',False)]}</attribute>
+                        </button>
+                        <button name="action_quotation_send" position="attributes">
+                            <attribute name="attrs">{'invisible': ['|',('discount_ok','=',False)]}</attribute>
+                        </button>
+                        <button name="print_quotation" position="attributes">
+                            <attribute name="attrs">{'invisible': ['|',('discount_ok','=',False)]}</attribute>
+                        </button>
+                        <button name="print_quotation" position="attributes">
+                            <attribute name="attrs">{'invisible': ['|',('discount_ok','=',False)]}</attribute>
+                        </button>
+                        <button name="action_button_confirm" position="attributes">
+                            <attribute name="attrs">{'invisible': ['|',('discount_ok','=',False)]}</attribute>
+                        </button>
+                        <button name="action_button_confirm" position="attributes">
+                            <attribute name="attrs">{'invisible': ['|',('discount_ok','=',False)]}</attribute>
+                        </button>
 
                         <button name="action_button_confirm" position="after">
-	                        <button name="approve_discount" states="draft,sent" string="Aprobar Dtos" class="oe_highlight" 
-        	                              type="object"  groups="base.group_sale_manager"/>
+	                        <button name="approve_discount" states="draft,sent" string="Aprobar Dtos" class="oe_highlight" type="object" groups="base.group_sale_manager" attrs="{'invisible': ['|',('discount_ok','=',True)]}"/>
 			</button>
 
 			<field name="pricelist_id" position="attributes">
