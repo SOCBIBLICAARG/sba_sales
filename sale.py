@@ -11,6 +11,7 @@ class crm_case_section(osv.Model):
     _columns = {
         'discount': fields.float('Approval Discount'),
         'credit_tolerance': fields.float('Approbal Credit Tolerance'),
+        'region_id': fields.many2one('res.partner.region', 'Region'),
     }
 
 crm_case_section()

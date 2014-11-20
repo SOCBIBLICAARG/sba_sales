@@ -7,6 +7,9 @@
 	        <field name="model">crm.case.section</field>
 		<field name="inherit_id" ref="sales_team.crm_case_section_view_form" />
 	        <field name="arch" type="xml">
+			<field name="code" position="after">
+				<field name="region_id"/>
+			</field>
 			<notebook position="inside">
 				<page string="Approval Limits">
 					<group>
@@ -17,19 +20,6 @@
 			</notebook>
 		</field>
 	</record>
-
-	<!-- record id="view_saleorder_filter_inh" model="ir.ui.view">
-        	<field name="name">Sale Orders - Search</field>
-	        <field name="model">sale.order</field>
-		<field name="inherit_id" ref="sale.view_sales_order_filter" />
-	        <field name="arch" type="xml">
-		<data>
-	                <xpath expr="//filter[@string='Sales']" position="before" groups="base.group_sale_manager">
-        	                <filter string='Discount' icon="terp-mrp" domain="[('discount_ok','=','False')]" />
-                	</xpath>
-		</data>
-		</field>
-	</record -->
 
 	<record id="view_saleorder_tree_inh" model="ir.ui.view">
         	<field name="name">Quotations</field>
@@ -102,17 +92,6 @@
 			<field name="price_unit" position="attributes">
 			            <attribute name="readonly">1</attribute>
 			</field>
-			<!-- field name="discount" on_change="onchange_discount(discount,context)" / -->
-			<!-- field name="discount" position="attributes">
-			            <attribute name="readonly">1</attribute>
-			</field>
-                        <xpath
-                               expr="//field[@name='order_line']/tree//field[@name='discount']" on_change="onchange_discount(discount,context)" />
-                        <xpath expr="//field[@name='order_line']/tree//field[@name='discount']" position="attributes" >
-				<attribute name="readonly">1</attribute>
-			</xpath -->
-			
-
 		</data>
 	    </field>
 	</record>

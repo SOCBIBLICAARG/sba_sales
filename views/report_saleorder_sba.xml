@@ -151,16 +151,16 @@ pagado en destino.</span>
 			</thead>
                        <tbody>
 				<td>
-                                   <span  t-field="o.partner_id.region.printed_name"/>
+                                   <span  t-field="o.section_id.region_id.printed_name"/>
 				</td>
                                 <td>
-                                   <span  t-field="o.partner_id.region.printed_address"/>
+                                   <span  t-field="o.section_id.region_id.printed_address"/>
                                 </td>
                                 <td>
-                                   <span  t-field="o.partner_id.region.printed_phone"/>
+                                   <span  t-field="o.section_id.region_id.printed_phone"/>
                                 </td>
                                 <td>
-                                   <span  t-field="o.partner_id.region.printed_email"/>
+                                   <span  t-field="o.section_id.region_id.printed_email"/>
                                 </td>
 				<td>www.sba.org.ar</td>
                        </tbody>
