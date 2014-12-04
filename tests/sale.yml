@@ -116,4 +116,9 @@
   !assert {model: sale.order, id: sba_sales.sale_order_from_lead, string: No se permitio el descuento}:
     - discount_ok == False
     - state == 'draft'
+-
+  ERROR
+-
+  !assert {model: sale.order, id: sba_sales.sale_order_from_lead, string: No se permitio el descuento}:
+    - state == 'nodraft'
 
