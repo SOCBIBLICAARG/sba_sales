@@ -12,7 +12,13 @@
     name: 'Iniciativa para probar'
     partner_id: contacto_0
     description: Descripcion de la nueva oportunidad 
-    section_id: saleteam_local
+
+-
+ Verificamos que se asigna el grupo correcto de ventas.
+-
+  !python {model: crm.lead}: |
+    lead = self.browse(cr, uid, ref('test_crm_lead_new'))
+    assert lead.section_id.id == ref('saleteam_local'), "Default section_id not assigned."
 
 -
   Vemos el estado inicial de la iniciativa..
