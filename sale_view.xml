@@ -60,7 +60,7 @@
                         </button>
 
                         <button name="action_button_confirm" position="after">
-	                        <button name="approve_discount" states="draft,sent" string="Aprobar Dtos" class="oe_highlight" type="object" groups="base.group_sale_manager" attrs="{'invisible': ['|',('discount_ok','=',True)]}"/>
+	                        <button name="approve_discount" states="draft,sent" string="Aprobar Dtos" class="oe_highlight" type="object" attrs="{'invisible': ['|',('discount_ok','=',True)]}"/>
 			</button>
 
 			<field name="pricelist_id" position="attributes">
