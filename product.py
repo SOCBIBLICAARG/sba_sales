@@ -117,6 +117,10 @@ class product_product(osv.osv):
         	'pricelist_price_iglesias': fields.function(_fnct_pricelist_price_iglesias, string='Precio Iglesias'),
 		}
 
+        def name_search(self, cr, uid, name="", args=None, operator='ilike', context=None, limit=100):
+            r = super(product_product, self).name_search(cr, uid, name=name, args=args, operator=operator, context=context, limit=limit)
+            r = [ tuple(i.values()) for i in self.search_read(cr, uid, [('sba_code',operator,name)], ['id','name']) ] + r
+            return r
 	
 product_product()
 
