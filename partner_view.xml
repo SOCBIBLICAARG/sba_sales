@@ -69,7 +69,7 @@
 				<page string="SBA">
 				   <group colspan="2">
 					<field name="region" /> 
-					<field name="canal" invisible="1"/> 
+					<field name="canal"/> 
 					<field name="correlativo" /> 
 					<field name="cod_epicor" /> 
 					<field name="warehouse_id" /> 
