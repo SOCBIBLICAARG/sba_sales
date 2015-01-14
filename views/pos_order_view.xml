@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+	<record id="view_pos_order" model="ir.ui.view">
+	        <field name="model">pos.order</field>
+		<field name="inherit_id" ref="point_of_sale.view_pos_pos_form" />
+	        <field name="arch" type="xml">
+			<button name="action_invoice" position="after">
+				<button name="action_ticket" string="Ticket" type="object" states="paid"/>
+			</button>
+			<button name="action_invoice" position="attributes">
+				<attribute name="invisible">1</attribute>
+			</button>
+			<button name="662" position="attributes">
+				<attribute name="invisible">1</attribute>
+			</button>
+		</field>
+	</record>
+    </data>
+</openerp>
+

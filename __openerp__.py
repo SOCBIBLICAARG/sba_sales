@@ -32,6 +32,7 @@
         'sale_report_discount_view.xml',
         'ir_cron.xml',
         'views/report_saleorder_sba.xml',
+        'views/pos_order_view.xml',
     ],
     'demo_xml': [],
     'test':[
