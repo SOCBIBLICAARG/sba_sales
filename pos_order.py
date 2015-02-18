@@ -150,7 +150,7 @@ class pos_order(osv.osv):
                         "description_3": "",
                         "description_4": "",
                         "item_description": "%5.2f%%" % line.discount,
-                        "quantity": line.quantity * factor,
+                        "quantity": line.qty * factor,
                         "unit_price": line.price_unit * (line.discount/100.),
                         "vat_rate": vat_rate * (line.discount/100.),
                         "fixed_taxes": 0,
