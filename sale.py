@@ -9,8 +9,9 @@ class crm_case_section(osv.Model):
     _inherit = 'crm.case.section'
 
     _columns = {
-        'discount': field.float('Approval Discount'),
-        'credit_tolerance': field.float('Approbal Credit Tolerance'),
+        'discount': fields.float('Approval Discount'),
+        'credit_tolerance': fields.float('Approbal Credit Tolerance'),
+        'region_id': fields.many2one('res.partner.region', 'Region'),
     }
 
 crm_case_section()
@@ -92,12 +93,11 @@ class sale_order(osv.osv):
         	'''
 	        This function opens a window to compose an email, with the edi sale template message loaded by default
         	'''
+	        assert len(ids) == 1, 'This option should only be used for a single id at a time'
 		obj = self.browse(cr,uid,ids)
-		if obj:
-			if not self.approve_discount_so(cr,uid,ids) and not obj.discount_ok:
-				raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
-				return None
-			
+                if obj and not obj.discount_ok:
+                        raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
+                        return None
 		return super(sale_order, self).action_quotation_send(cr,uid,ids,context=context)
 
 
@@ -105,12 +105,11 @@ class sale_order(osv.osv):
         	'''
 	        This function prints the sales order and mark it as sent, so that we can see more easily the next step of the workflow
         	'''
-		obj = self.browse(cr,uid,ids)
-		if obj:
-			if not self.approve_discount_so(cr,uid,ids) and not obj.discount_ok:
-				raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
-				return None
 	        assert len(ids) == 1, 'This option should only be used for a single id at a time'
+		obj = self.browse(cr,uid,ids)
+                if obj and not obj.discount_ok:
+                        raise osv.except_osv(('Alerta!'), ("El descuento necesita ser aprobado"))
+                        return None
         	# self.signal_workflow(cr, uid, ids, 'quotation_sent')
 	        return self.pool['report'].get_action(cr, uid, ids, 'sba_sales.report_saleorder_sba', context=context)
 			
@@ -184,77 +183,83 @@ class sale_order(osv.osv):
 		return True
 		
 	def action_button_confirm(self, cr, uid, ids, context=None):
-		obj = self.browse(cr,uid,ids)
-		if obj.survey_id:
-			return_survey = self.send_survey(cr,uid,obj.survey_id.id,obj.partner_id.id,context)		
-		return super(sale_order,self).action_button_confirm(cr,uid,ids,context)
+            r = super(sale_order,self).action_button_confirm(cr,uid,ids,context)
+            obj = self.browse(cr,uid,ids)
+            if obj.survey_id:
+                    return_survey = self.send_survey(cr,uid,obj.survey_id.id,obj.partner_id.id,context)		
+            return r
 		
         def create(self, cr, uid, vals, context=None):
-		vals['discount_ok'] = vals.get('add_disc', 0.0) < 0.01
-        	return super(sale_order, self).create(cr, uid, vals, context=context)
+            vals['discount_ok'] = not float(vals.get('add_disc', 0.0)) > 0
+            return super(sale_order, self).create(cr, uid, vals, context=context)
 
         def write(self, cr, uid, ids, vals, context=None):
-		if ids:
-			if 'discount_ok' not in vals.keys() and 'date_confirm' not in vals.keys():
-		                obj = self.browse(cr, uid, ids[0], context=context)
-				# if obj.state in ['draft','sent']:
-				if obj.state in ['draft']:
-					if obj.add_disc < 0.01:
-						vals['discount_ok'] = True
-					else:
-						vals['discount_ok'] = False
-				if 'add_disc' in vals.keys():
-					if vals['add_disc'] < 0.01:
-						vals['discount_ok'] = True
-					else:
-						vals['discount_ok'] = False
+            if ids:
+                    if 'discount_ok' not in vals.keys():
+                            obj = self.browse(cr, uid, ids[0], context=context)
+                            if vals.get('state', obj.state) in ['draft']:
+                                    vals['discount_ok'] = not float(vals.get('add_disc', obj.add_disc)) > 0
 
-        	return super(sale_order, self).write(cr, uid, ids, vals, context=context)
-	#	#if not vals['discount_ok']:
-	#	#	raise osv.except_osv(('Warning!'), ("El descuento necesita ser aprobado"))
+            return super(sale_order, self).write(cr, uid, ids, vals, context=context)
 
 	def _check_validation_sba(self, cr, uid, ids, context = None):
-                obj = self.browse(cr, uid, ids[0], context=context)
-                if obj.state == 'manual' or obj.state == 'sent':
-			if obj.discount_ok:
-				return True
-                	if obj.add_disc < 0.01:
-                        	return True
-			if not obj.discount_ok:
-				return False
-		return True
-
+            obj = self.browse(cr, uid, ids[0], context=context)
+            if obj.state == 'manual' or obj.state == 'sent':
+                    if obj.discount_ok:
+                            return True
+                    if obj.add_disc < 0.01:
+                            return True
+                    if not obj.discount_ok:
+                            return False
+            return True
 
 	_constraints = [(_check_validation_sba, '\n\nUd acaba de otorgar un descuento superior al descuento que se le permite otorgar.\nPor favor, pida a su superior que autorice el pedido', ['add_disc','state']),
 			]
 
 	def approve_discount(self, cr, uid, ids, context=None):
-		vals = {
-			'discount_ok': self.approve_discount_so(cr,uid,[ids])[ids],
-			'state': 'sent',
-			}
-		self.write(cr,uid,ids,vals)
+            user_obj = self.pool.get('res.users')
+            user = user_obj.browse(cr, uid, uid)
+            r = {}
+            for so in self.browse(cr, uid, ids, context=context):
+                team = so.section_id
 
-	def approve_discount_so(self, cr, uid, ids, context=None):
-                r = {}
-                for so in self.browse(cr, uid, ids, context=context):
-                    team = so.section_id
-                    
-                    while team and team.user_id != uid:
-                        team = team.parent_id
+                while team and team.user_id.id != uid:
+                    team = team.parent_id
 
-                    if not team:
-                        """ No es responsable de ningun equipo """
-                        discount = 0
-                        credit_tolerance = 0
+                if not team:
+                    """ No es responsable de ningun equipo """
+                    discount = 0
+                    credit_tolerance = 0
+                else:
+                    """ Es responsable de un equipo """
+                    discount = team.discount
+                    credit_tolerance = team.credit_tolerance
+
+                discount_ok = so.add_disc <= discount
+
+                if not discount_ok:
+                    boss = so.section_id.user_id
+
+                    if boss == user:
+                        boss = so.section_id.parent_id.user_id if so.section_id.parent_id else False
+
+                    if not boss:
+                        message_id = self.message_post(cr, uid, [so.id],
+                                                       subject=_('Request action'),
+                                                       body=_('The sale order has not a valid sale team. Assign one.'))
+                        self.pool.get('mail.message').set_message_read(cr, user.id, [message_id], False)
                     else:
-                        """ Es responsable de un equipo """
-                        discount = team.discount
-                        credit_tolerance = team.credit_tolerance
+                        self.message_subscribe_users(cr, uid, [so.id], user_ids=[boss.id])
+                        message_id = self.message_post(cr, uid, [so.id],
+                                                       subject=_('Request action'),
+                                                       body=_('The user <b>%s</b> tried to approve this sale order, but the user does not have the authorization to approve such discount.\nAn approval request for this sale order has been created for user <b>%s</b>.') % (user.name, boss.name), to_read=True)
+                        self.pool.get('mail.message').set_message_read(cr, boss.id, [message_id], False)
+                else:
+                    self.message_post(cr, uid, [so.id], body=_('The user <b>%s</b> approve this sale order with %4.2f%% discount.') % (user.name, so.add_disc))
 
-                    r[so.id] = so.add_disc <= discount and so.partner_id.credit <= credit_toleance
+                self.write(cr,uid,so.id, { 'discount_ok': discount_ok })
 
-                return r
+            return { }
 
 sale_order()
 
@@ -264,7 +269,6 @@ class sale_order_line(osv.osv):
 	_inherit = "sale.order.line"
 
 	def onchange_discount(self, cr, uid, ids, discount, context=None):
-		import pdb;pdb.set_trace()
 		obj = self.browse(cr,uid,ids)
 		if obj.discount > discount:
 			res['discount'] = discount
