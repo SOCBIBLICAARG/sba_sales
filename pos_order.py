@@ -57,7 +57,7 @@ class pos_order(osv.osv):
                     'product_uom': line.product_id.uom_id.id,
                     'product_uos': line.product_id.uom_id.id,
                     'picking_id': picking_id,
-                    'picking_type_id': picking_type.id, 
+                    'picking_type_id': picking_type.id,
                     'product_id': line.product_id.id,
                     'product_uos_qty': abs(line.qty),
                     'product_uom_qty': abs(line.qty),
@@ -65,7 +65,7 @@ class pos_order(osv.osv):
                     'location_id': location_id if line.qty >= 0 else destination_id,
                     'location_dest_id': destination_id if line.qty >= 0 else location_id,
                 }, context=context))
-                
+
             if picking_id:
                 picking_obj.action_confirm(cr, uid, [picking_id], context=context)
                 picking_obj.force_assign(cr, uid, [picking_id], context=context)
@@ -150,7 +150,7 @@ class pos_order(osv.osv):
                         "description_3": "",
                         "description_4": "",
                         "item_description": "%5.2f%%" % line.discount,
-                        "quantity": line.quantity * factor,
+                        "quantity": line.qty * factor,
                         "unit_price": line.price_unit * (line.discount/100.),
                         "vat_rate": vat_rate * (line.discount/100.),
                         "fixed_taxes": 0,
@@ -163,7 +163,7 @@ class pos_order(osv.osv):
                         "extra_description": False,
                         "amount": st.amount,
                     })
- 
+
                 r = journal.make_fiscal_ticket(ticket)[journal.id]
                 _logger.info('Printer return %s' % r)
                 document_type = r.get('document_type', '?')
