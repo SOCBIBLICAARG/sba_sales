@@ -83,11 +83,13 @@ class pos_order(osv.osv):
         for o in self.browse(cr, uid, ids):
             journal = o.session_id.config_id.journal_id
             if journal.use_fiscal_printer:
-                debit_note = (o.amount_total < 0)
-                factor = -1 if debit_note else 1
+                credit_note = (o.amount_total < 0)
+                factor = -1 if credit_note else 1
+                if credit_note:
+                    raise NotImplemented
                 ticket={
                     "turist_ticket": False,
-                    "debit_note": debit_note,
+                    "debit_note": False,
                     "partner": {
                         "name": o.partner_id.name,
                         "name_2": "",
