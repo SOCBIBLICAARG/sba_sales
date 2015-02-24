@@ -1,66 +1,88 @@
-from openerp.osv import osv,fields
-from datetime import date,timedelta,time,datetime
-from time import strftime,gmtime
-
-class crm_lead(osv.osv):
-	_name = "crm.lead"
-	_inherit = "crm.lead"
-
-	_columns = {
-	       'date_deadline': fields.date('Expected Closing', help="Estimate of the date on which the opportunity will be won.",required=True),
-	       'categ_ids': fields.many2many('crm.case.categ', 'crm_lead_category_rel', 'lead_id', 'category_id', 'Tags', \
-	        	    domain="['|', ('section_id', '=', section_id), ('section_id', '=', False), ('object_id.model', '=', 'crm.lead')]",\
-			 help="Classify and analyze your lead/opportunity categories like: Training, Service",required=True),
-		}
-
-	def _check_date(self, cr, uid, ids, context=None):
-        	obj = self.browse(cr, uid, ids[0], context=context)
-		if not obj.date_deadline:
-			return False
-	        if obj.date_deadline < obj.date_action:
-        	    return False
-	        return True
-
-	def create(self, cr, uid, vals, context=None):
-                opportunity_id = super(crm_lead, self).create(cr, uid, vals, context=context)
-                if 'date_deadline' in vals.keys():
-			alarm_id = self.pool.get('calendar.alarm').search(cr,uid,[('name','=','1 day mail')])
-			if not alarm_id:
-				alarm_id = [1]	
-			vals_event = {
-				'allday': True,
-				'start_date': vals['date_deadline'],
-				'stop_date': vals['date_deadline'],
-				'state': 'open',
-				'description': 'Vencimiento oportunidad ' + vals['name'] + '\nMonto estimado: ' + str(vals['planned_revenue'] or 0),
-				'name': vals['name'],
-				'opportunity_id': opportunity_id,
-				'alarm_ids': [(6,0,alarm_id)],
-				}	
-			event_id = self.pool.get('calendar.event').create(cr,uid,vals_event)
-		return opportunity_id
-
-	def write(self, cr, uid, ids, vals, context=None):
-                return_id = super(crm_lead, self).write(cr, uid, ids, vals, context=context)
-                if 'date_deadline' in vals.keys():
-			for opportunity_id in ids:
-				event_id = self.pool.get('calendar.event').search(cr,uid,[('opportunity_id','=',opportunity_id)])
-				vals_event = {
-					'start_date': vals['date_deadline'],
-					'stop_date': vals['date_deadline'],
-					}
-				if event_id:
-					event_id = self.pool.get('calendar.event').write(cr,uid,event_id,vals_event)
-		return return_id
+# -*- coding: utf-8 -*-
+from openerp import models, fields, _
+from openerp import api
+from datetime import date, timedelta
 
 
-	_constraints = [
-        	(_check_date, 'Deadline should be higher than next action date.', ['date_deadline']),
-	    ]
+class crm_lead(models.Model):
+    _name = "crm.lead"
+    _inherit = "crm.lead"
 
-	_defaults = {
-		'date_deadline': str(date.today()+timedelta(days=15)),
-		# 'date_deadline': lambda *a: strftime("%Y-%m-%d", gmtime()),
-		}
-	
+    date_deadline = fields.Date(
+        'Expected Closing',
+        help="Estimate of the date on which the opportunity will be won.",
+        required=True)
+    categ_ids = fields.Many2many(
+        'crm.case.categ',
+        'crm_lead_category_rel',
+        'lead_id',
+        'category_id',
+        'Tags',
+        domain="['|', ('section_id', '=', section_id), "
+        "('section_id', '=', False), "
+        "('object_id.model', '=', 'crm.lead')]",
+        help="Classify and analyze your lead/opportunity categories like: "
+        "Training, Service",
+        required=True)
+    event_ids = fields.One2many('calendar.event', 'opportunity_id', 'Events')
+
+    @api.v8
+    @api.onchange('date_deadline')
+    def onchange_date_deadline(self):
+        self.set_event()
+        import pdb; pdb.set_trace()
+
+    @api.v8
+    @api.multi
+    def set_event(self, context=None):
+        env = self.env
+        alarm_id = env['calendar.alarm'].search([('name', '=', '1 day mail')])
+
+        for lead in self:
+            if lead.event_ids:
+                for event in lead.event_ids:
+                    vals = {
+                        'start_date': lead.date_deadline,
+                        'stop_date': lead.date_deadline,
+                        'alarm_ids': [(6, 0, alarm_id.ids)]
+                    }
+                    event.write(vals)
+            else:
+                vals = {
+                    'allday': True,
+                    'start_date': lead.date_deadline,
+                    'stop_date': lead.date_deadline,
+                    'state': 'open',
+                    'description':
+                    _('Oportunity due %s\n Estimated amount %f') %
+                    (lead.name, lead.planned_revenue or 0),
+                    'name': lead.name,
+                    'opportunity_id': lead.id,
+                    'alarm_ids': [(6, 0, alarm_id.ids)],
+                }
+                env['calendar.event'].create(vals)
+
+        return
+
+    def _check_date(self, cr, uid, ids, context=None):
+        obj = self.browse(cr, uid, ids[0], context=context)
+        if not obj.date_deadline:
+            return False
+        if obj.date_deadline < obj.date_action:
+            return False
+        return True
+
+    _constraints = [
+        (
+            _check_date,
+            'Deadline should be higher than next action date.',
+            ['date_deadline']
+        ),
+    ]
+
+    _defaults = {
+        'date_deadline': lambda *a: str(date.today()+timedelta(days=15)),
+    }
+
 crm_lead()
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
