@@ -7,3 +7,4 @@ import mail
 import user_assign
 import pos_order
 import account
+import invoice
