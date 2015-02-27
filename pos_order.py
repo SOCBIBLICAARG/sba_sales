@@ -157,17 +157,16 @@ class pos_order(osv.osv):
             if journal.use_fiscal_printer:
                 credit_note = (o.amount_total < 0)
                 factor = -1 if credit_note else 1
-                if credit_note:
-                    raise NotImplemented
+                import pdb; pdb.set_trace()
                 ticket = {
                     "turist_ticket": False,
                     "debit_note": False,
                     "partner": {
-                        "name": o.partner_id.name,
+                        "name": o.partner_id.name or "",
                         "name_2": "",
-                        "address": o.partner_id.street,
-                        "address_2": o.partner_id.city,
-                        "address_3": o.partner_id.country_id.name,
+                        "address": o.partner_id.street or "",
+                        "address_2": o.partner_id.city or "",
+                        "address_3": o.partner_id.country_id.name or "",
                         "document_type": document_type_map.get(
                             o.partner_id.document_type_id.code, "D"),
                         "document_number": o.partner_id.document_number,
@@ -247,8 +246,16 @@ class pos_order(osv.osv):
                         "amount": st.amount,
                     })
 
-                r = journal.make_fiscal_ticket(ticket)[journal.id]
+                if credit_note:
+                    r = journal.make_ticket_notacredito(ticket)[journal.id]
+                else:
+                    r = journal.make_ticket_factura(ticket)[journal.id]
                 _logger.info('Printer return %s' % r)
+                if r and 'error' in r:
+                    raise osv.except_osv(
+                        _('Printer Error!'),
+                        _('Printer return: %s') % r['error'])
+
                 document_type = r.get('document_type', '?')
                 point_of_sale = journal.point_of_sale or 0
                 document_number = r.get('document_number', '?')
@@ -258,7 +265,7 @@ class pos_order(osv.osv):
                                  'unknown')
                 self.write(cr, uid, ids, {'pos_reference': pos_reference})
                 self.create_invoice(cr, uid, ids, context=context)
-                if r.get('command', '') == 'cancel_fiscal_ticket':
+                if r.get('command', '') == 'cancel_ticket_factura':
                     if (o.picking_type_id):
                         self.cancel_order(cr, uid, ids, context=context)
                     else:
