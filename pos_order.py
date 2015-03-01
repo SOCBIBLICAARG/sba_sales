@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from openerp.osv import osv
+from openerp.osv import osv, fields
 from openerp.tools.translate import _
 from openerp.addons.l10n_ar_fpoc.invoice \
     import document_type_map, responsability_map
@@ -11,6 +11,10 @@ _logger = logging.getLogger(__name__)
 
 class pos_order(osv.osv):
     _inherit = "pos.order"
+
+    _columns = {
+        'origin_id': fields.many2one('pos.order', 'Origin'),
+    }
 
     def create_picking(self, cr, uid, ids, context=None):
         """Create a picking for each order and validate it."""
@@ -148,6 +152,205 @@ class pos_order(osv.osv):
             self.signal_workflow(cr, uid, [o.id], 'invoice')
             inv_obj.signal_workflow(cr, uid, [inv_id], 'invoice_open')
 
+    def refund(self, cr, uid, ids, context=None):
+        r = super(pos_order, self).refund(cr, uid, ids, context=context)
+        self.write(cr, uid, r['res_id'], {'origin_id': ids[0]})
+        return r
+
+    def build_ticket_factura(self, cr, uid, ids, context=None):
+        r = {}
+        factor = 1
+        for o in self.browse(cr, uid, ids):
+            ticket = {
+                "turist_ticket": False,
+                "debit_note": False,
+                "partner": {
+                    "name": o.partner_id.name or "",
+                    "name_2": "",
+                    "address": o.partner_id.street or "",
+                    "address_2": o.partner_id.city or "",
+                    "address_3": o.partner_id.country_id.name or "",
+                    "document_type": document_type_map.get(
+                        o.partner_id.document_type_id.code, "D"),
+                    "document_number": o.partner_id.document_number,
+                    "responsability": responsability_map.get(
+                        o.partner_id.responsability_id.code, "F"),
+                },
+                "related_document": o.picking_id and o.picking_id.name
+                or _("No picking"),
+                "related_document_2": o.picking_id and o.picking_type_id
+                and o.picking_type_id.name or "",
+                "turist_check": "",
+                "lines": [],
+                "payments": [],
+                "cut_paper": True,
+                "electronic_answer": False,
+                "print_return_attribute": False,
+                "current_account_automatic_pay": False,
+                "print_quantities": True,
+                "tail_no": 1 if o.user_id.name else 0,
+                "tail_text": _("Saleman: %s") % o.user_id.name
+                if o.user_id.name else "",
+                "tail_no_2": 0,
+                "tail_text_2": "",
+                "tail_no_3": 0,
+                "tail_text_3": "",
+            }
+            for line in o.lines:
+                vat_rate = (line.price_subtotal_incl -
+                            line.price_subtotal) * factor
+                ticket["lines"].append({
+                    "item_action": "sale_item",
+                    "as_gross": False,
+                    "send_subtotal": True,
+                    "check_item": False,
+                    "collect_type": "q",
+                    "large_label": "",
+                    "first_line_label": "",
+                    "description": "[%s]" % (line.product_id.ean13 or
+                                             line.product_id.sba_code or 0),
+                    "description_2": "",
+                    "description_3": "",
+                    "description_4": "",
+                    "item_description": line.product_id.name,
+                    "quantity": line.qty * factor,
+                    "unit_price": line.price_unit,
+                    "vat_rate": vat_rate,
+                    "fixed_taxes": 0,
+                    "taxes_rate": 0
+                })
+                if line.discount > 0:
+                    ticket["lines"].append({
+                        "item_action": "discount_item",
+                        "as_gross": False,
+                        "send_subtotal": True,
+                        "check_item": False,
+                        "collect_type": "q",
+                        "large_label": "",
+                        "first_line_label": "",
+                        "description": "",
+                        "description_2": "",
+                        "description_3": "",
+                        "description_4": "",
+                        "item_description": "%5.2f%%" % line.discount,
+                        "quantity": line.qty * factor,
+                        "unit_price": line.price_unit * (
+                            line.discount/100.),
+                        "vat_rate": vat_rate * (
+                            line.discount/100.),
+                        "fixed_taxes": 0,
+                        "taxes_rate": 0
+                    })
+            for st in o.statement_ids:
+                ticket["payments"].append({
+                    "null_pay": (o.amount_total < 0),
+                    "include_in_arching": False,
+                    "card_pay": False,
+                    "description": st.name,
+                    "extra_description": False,
+                    "amount": st.amount,
+                })
+            r[o.id] = ticket
+        return r
+
+    def build_ticket_notacredito(self, cr, uid, ids, context=None):
+        r = {}
+        factor = -1
+        for o in self.browse(cr, uid, ids):
+            ticket = {
+                "turist_ticket": False,
+                "debit_note": False,
+                "partner": {
+                    "name": o.partner_id.name or "Consumidor Final",
+                    "name_2": "",
+                    "address": o.partner_id.street or "Consumidor Final",
+                    "address_2": o.partner_id.city or "",
+                    "address_3": o.partner_id.country_id.name or "",
+                    "document_type": document_type_map.get(
+                        o.partner_id.document_type_id.code, "D"),
+                    "document_number": o.partner_id.document_number or "0",
+                    "responsability": responsability_map.get(
+                        o.partner_id.responsability_id.code, "F"),
+                },
+                "related_document": o.picking_id and o.picking_id.name
+                or _("No picking"),
+                "related_document_2": o.picking_id and o.picking_type_id
+                and o.picking_type_id.name or "",
+                "origin_document": o.origin_id.sequence_number
+                if o.origin_id else _("Unknown"),
+                "lines": [],
+                "payments": [],
+                "cut_paper": True,
+                "electronic_answer": False,
+                "print_return_attribute": False,
+                "current_account_automatic_pay": False,
+                "print_quantities": True,
+                "tail_no": 1 if o.user_id.name else 0,
+                "tail_text": _("Saleman: %s") % o.user_id.name
+                if o.user_id.name else "",
+                "tail_no_2": 0,
+                "tail_text_2": "",
+                "tail_no_3": 0,
+                "tail_text_3": "",
+                "sign_no": 3,
+            }
+            for line in o.lines:
+                vat_rate = (line.price_subtotal_incl -
+                            line.price_subtotal) * factor
+                ticket["lines"].append({
+                    "item_action": "sale_item",
+                    "as_gross": False,
+                    "send_subtotal": True,
+                    "check_item": False,
+                    "collect_type": "q",
+                    "large_label": "",
+                    "first_line_label": "",
+                    "description": "[%s]" % (line.product_id.ean13 or
+                                             line.product_id.sba_code or 0),
+                    "description_2": "",
+                    "description_3": "",
+                    "description_4": "",
+                    "item_description": line.product_id.name,
+                    "quantity": line.qty * factor,
+                    "unit_price": line.price_unit,
+                    "vat_rate": vat_rate,
+                    "fixed_taxes": 0,
+                    "taxes_rate": 0
+                })
+                if line.discount > 0:
+                    ticket["lines"].append({
+                        "item_action": "discount_item",
+                        "as_gross": False,
+                        "send_subtotal": True,
+                        "check_item": False,
+                        "collect_type": "q",
+                        "large_label": "",
+                        "first_line_label": "",
+                        "description": "",
+                        "description_2": "",
+                        "description_3": "",
+                        "description_4": "",
+                        "item_description": "%5.2f%%" % line.discount,
+                        "quantity": line.qty * factor,
+                        "unit_price": line.price_unit * (
+                            line.discount/100.),
+                        "vat_rate": vat_rate * (
+                            line.discount/100.),
+                        "fixed_taxes": 0,
+                        "taxes_rate": 0
+                    })
+            for st in o.statement_ids:
+                ticket["payments"].append({
+                    "null_pay": False,
+                    "include_in_arching": False,
+                    "card_pay": False,
+                    "description": st.name,
+                    "extra_description": False,
+                    "amount": st.amount * factor,
+                })
+            r[o.id] = ticket
+        return r
+
     def action_ticket(self, cr, uid, ids, context=None):
         picking_obj = self.pool.get('stock.picking')
         if len(ids) != 1:
@@ -156,99 +359,11 @@ class pos_order(osv.osv):
             journal = o.session_id.config_id.journal_id
             if journal.use_fiscal_printer:
                 credit_note = (o.amount_total < 0)
-                factor = -1 if credit_note else 1
-                import pdb; pdb.set_trace()
-                ticket = {
-                    "turist_ticket": False,
-                    "debit_note": False,
-                    "partner": {
-                        "name": o.partner_id.name or "",
-                        "name_2": "",
-                        "address": o.partner_id.street or "",
-                        "address_2": o.partner_id.city or "",
-                        "address_3": o.partner_id.country_id.name or "",
-                        "document_type": document_type_map.get(
-                            o.partner_id.document_type_id.code, "D"),
-                        "document_number": o.partner_id.document_number,
-                        "responsability": responsability_map.get(
-                            o.partner_id.responsability_id.code, "F"),
-                    },
-                    "related_document": o.picking_id and o.picking_id.name
-                    or _("No picking"),
-                    "related_document_2": o.picking_id and o.picking_type_id
-                    and o.picking_type_id.name or "",
-                    "turist_check": "",
-                    "lines": [],
-                    "payments": [],
-                    "cut_paper": True,
-                    "electronic_answer": False,
-                    "print_return_attribute": False,
-                    "current_account_automatic_pay": False,
-                    "print_quantities": True,
-                    "tail_no": 1 if o.user_id.name else 0,
-                    "tail_text": _("Saleman: %s") % o.user_id.name
-                    if o.user_id.name else "",
-                    "tail_no_2": 0,
-                    "tail_text_2": "",
-                    "tail_no_3": 0,
-                    "tail_text_3": "",
-                }
-                for line in o.lines:
-                    vat_rate = (line.price_subtotal_incl -
-                                line.price_subtotal) * factor
-                    ticket["lines"].append({
-                        "item_action": "sale_item",
-                        "as_gross": False,
-                        "send_subtotal": True,
-                        "check_item": False,
-                        "collect_type": "q",
-                        "large_label": "",
-                        "first_line_label": "",
-                        "description": "[%s]" % (line.product_id.ean13 or
-                                                 line.product_id.sba_code or 0),
-                        "description_2": "",
-                        "description_3": "",
-                        "description_4": "",
-                        "item_description": line.product_id.name,
-                        "quantity": line.qty * factor,
-                        "unit_price": line.price_unit,
-                        "vat_rate": vat_rate,
-                        "fixed_taxes": 0,
-                        "taxes_rate": 0
-                    })
-                    if line.discount > 0:
-                        ticket["lines"].append({
-                            "item_action": "discount_item",
-                            "as_gross": False,
-                            "send_subtotal": True,
-                            "check_item": False,
-                            "collect_type": "q",
-                            "large_label": "",
-                            "first_line_label": "",
-                            "description": "",
-                            "description_2": "",
-                            "description_3": "",
-                            "description_4": "",
-                            "item_description": "%5.2f%%" % line.discount,
-                            "quantity": line.qty * factor,
-                            "unit_price": line.price_unit * (
-                                line.discount/100.),
-                            "vat_rate": vat_rate * (
-                                line.discount/100.),
-                            "fixed_taxes": 0,
-                            "taxes_rate": 0
-                        })
-                for st in o.statement_ids:
-                    ticket["payments"].append({
-                        "type": "pay" if (o.amount_total > 0) else "null_pay",
-                        "description": st.name,
-                        "extra_description": False,
-                        "amount": st.amount,
-                    })
-
                 if credit_note:
+                    ticket = o.build_ticket_notacredito()[o.id]
                     r = journal.make_ticket_notacredito(ticket)[journal.id]
                 else:
+                    ticket = o.build_ticket_factura()[o.id]
                     r = journal.make_ticket_factura(ticket)[journal.id]
                 _logger.info('Printer return %s' % r)
                 if r and 'error' in r:
