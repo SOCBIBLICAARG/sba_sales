@@ -362,7 +362,7 @@ class pos_order(osv.osv):
             raise osv.except_osv(_('Error!'), _("Print one ticket at time"))
         for o in self.browse(cr, uid, ids):
             journal = o.session_id.config_id.journal_id
-            if journal.use_fiscal_printer:
+            if journal.use_fiscal_printer and not o.pos_reference:
                 if (o.amount_total >= 25000):
                     raise osv.except_osv(_('Error!'), _("Total must less than 25000 $"))
 
