@@ -392,4 +392,6 @@ class pos_order(osv.osv):
                     self.create_account_move(cr, uid, ids, context=context)
         return True
 
+pos_order()
+
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
