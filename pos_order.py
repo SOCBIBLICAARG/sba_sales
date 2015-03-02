@@ -370,14 +370,12 @@ class pos_order(osv.osv):
                 if credit_note:
                     ticket = o.build_ticket_notacredito()[o.id]
                     r = journal.make_ticket_notacredito(ticket)[journal.id]
-                    print r
                 else:
                     ticket = o.build_ticket_factura()[o.id]
                     r = journal.make_ticket_factura(ticket)[journal.id]
-                    print r
                 _logger.info('Printer return %s' % r)
 
-                ticket_canceled = r.get('error','x') == 'ticket canceled'
+                ticket_canceled = r and r.get('error','x') == 'ticket canceled'
                 if r and 'error' in r and not ticket_canceled:
                     raise osv.except_osv(
                         _('Printer Error!'),
