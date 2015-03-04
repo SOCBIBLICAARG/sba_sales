@@ -24,7 +24,8 @@ class pos_order(osv.osv):
 
         for order in self.browse(cr, uid, ids, context=context):
             if (order.amount_total >= 25000):
-                raise osv.except_osv(_('Error!'), _("Total must less than 25000 $"))
+                raise osv.except_osv(_('Error!'),
+                                     _("Total must less than 25000 $"))
 
             addr = order.partner_id and partner_obj.address_get(
                 cr, uid, [order.partner_id.id], ['delivery']) or {}
@@ -113,7 +114,6 @@ class pos_order(osv.osv):
             acc = partner.property_account_receivable.id
 
             credit_note = (o.amount_total < 0)
-            factor = -1 if credit_note else 1
             o_type = 'out_invoice' if not credit_note else 'out_refund'
 
             vals = {
@@ -203,7 +203,8 @@ class pos_order(osv.osv):
                 "tail_text_3": "",
             }
             for line in o.lines:
-                vat_rate = ([t.amount for t in line.product_id.product_tmpl_id.taxes_id
+                vat_rate = ([t.amount
+                             for t in line.product_id.product_tmpl_id.taxes_id
                              if 'IVA' in t.ref_tax_code_id.name] + [0])[0] * 100
                 ticket["lines"].append({
                     "item_action": "sale_item",
@@ -301,7 +302,8 @@ class pos_order(osv.osv):
                 "sign_no": 3,
             }
             for line in o.lines:
-                vat_rate = ([t.amount for t in line.product_id.product_tmpl_id.taxes_id
+                vat_rate = ([t.amount
+                             for t in line.product_id.product_tmpl_id.taxes_id
                              if 'IVA' in t.ref_tax_code_id.name] + [0])[0] * 100
                 ticket["lines"].append({
                     "item_action": "sale_item",
@@ -364,7 +366,8 @@ class pos_order(osv.osv):
             journal = o.session_id.config_id.journal_id
             if journal.use_fiscal_printer and not o.pos_reference:
                 if (o.amount_total >= 25000):
-                    raise osv.except_osv(_('Error!'), _("Total must less than 25000 $"))
+                    raise osv.except_osv(_('Error!'),
+                                         _("Total must less than 25000 $"))
 
                 credit_note = (o.amount_total < 0)
                 if credit_note:
@@ -375,19 +378,21 @@ class pos_order(osv.osv):
                     r = journal.make_ticket_factura(ticket)[journal.id]
                 _logger.info('Printer return %s' % r)
 
-                ticket_canceled = r and r.get('error','x') == 'ticket canceled'
+                ticket_canceled = r and r.get('error', 'x') == 'ticket canceled'
                 if r and 'error' in r and not ticket_canceled:
                     raise osv.except_osv(
                         _('Printer Error!'),
                         _('Printer return: %s') % r['error'])
 
                 document_type = r.get('document_type', '?')
-                point_of_sale = journal.point_of_sale or journal.fiscal_printer_id.pointOfSale or 0
+                point_of_sale = journal.point_of_sale or \
+                    journal.fiscal_printer_id.pointOfSale or 0
                 document_number = r.get('document_number', '?')
                 pos_reference = ("%s%s-%04i-%08i" % (
                     "NC" if credit_note else "F",
                     document_type, point_of_sale,
-                    int(document_number)) if unicode(document_number).isnumeric() else 'unknown')
+                    int(document_number))
+                    if unicode(document_number).isnumeric() else 'unknown')
                 self.write(cr, uid, ids, {'pos_reference': pos_reference})
                 self.create_invoice(cr, uid, ids, context=context)
                 if r.get('command', '') == 'cancel_ticket_factura':
