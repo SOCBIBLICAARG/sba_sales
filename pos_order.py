@@ -23,6 +23,9 @@ class pos_order(osv.osv):
         move_obj = self.pool.get('stock.move')
 
         for order in self.browse(cr, uid, ids, context=context):
+            if (order.amount_total >= 25000):
+                raise osv.except_osv(_('Error!'), _("Total must less than 25000 $"))
+
             addr = order.partner_id and partner_obj.address_get(
                 cr, uid, [order.partner_id.id], ['delivery']) or {}
             picking_type = order.picking_type_id
@@ -108,7 +111,10 @@ class pos_order(osv.osv):
                 if not o.partner_id else o.partner_id
 
             acc = partner.property_account_receivable.id
-            o_type = 'out_invoice'
+
+            credit_note = (o.amount_total < 0)
+            factor = -1 if credit_note else 1
+            o_type = 'out_invoice' if not credit_note else 'out_refund'
 
             vals = {
                 'name': o.name,
@@ -132,7 +138,7 @@ class pos_order(osv.osv):
                 vals = {
                     'invoice_id': inv_id,
                     'product_id': line.product_id.id,
-                    'quantity': line.qty,
+                    'quantity': abs(line.qty),
                 }
                 inv_name = product_obj.name_get(
                     cr, uid, [line.product_id.id], context=context)[0][1]
@@ -142,8 +148,8 @@ class pos_order(osv.osv):
                     line.qty, partner_id=partner.id,
                     fposition_id=partner.property_account_position.id
                 )['value'])
-                vals['price_unit'] = line.price_unit
-                vals['discount'] = line.discount
+                vals['price_unit'] = abs(line.price_unit)
+                vals['discount'] = abs(line.discount)
                 vals['name'] = inv_name
                 vals['invoice_line_tax_id'] = [
                     (6, 0, [x.id for x in line.product_id.taxes_id])]
@@ -197,8 +203,8 @@ class pos_order(osv.osv):
                 "tail_text_3": "",
             }
             for line in o.lines:
-                vat_rate = (line.price_subtotal_incl -
-                            line.price_subtotal) * factor
+                vat_rate = ([t.amount for t in line.product_id.product_tmpl_id.taxes_id
+                             if 'IVA' in t.ref_tax_code_id.name] + [0])[0] * 100
                 ticket["lines"].append({
                     "item_action": "sale_item",
                     "as_gross": False,
@@ -246,7 +252,7 @@ class pos_order(osv.osv):
                     "null_pay": (o.amount_total < 0),
                     "include_in_arching": False,
                     "card_pay": False,
-                    "description": st.name,
+                    "description": st.journal_id.name,
                     "extra_description": False,
                     "amount": st.amount,
                 })
@@ -276,7 +282,7 @@ class pos_order(osv.osv):
                 or _("No picking"),
                 "related_document_2": o.picking_id and o.picking_type_id
                 and o.picking_type_id.name or "",
-                "origin_document": o.origin_id.sequence_number
+                "origin_document": o.origin_id.pos_reference
                 if o.origin_id else _("Unknown"),
                 "lines": [],
                 "payments": [],
@@ -295,8 +301,8 @@ class pos_order(osv.osv):
                 "sign_no": 3,
             }
             for line in o.lines:
-                vat_rate = (line.price_subtotal_incl -
-                            line.price_subtotal) * factor
+                vat_rate = ([t.amount for t in line.product_id.product_tmpl_id.taxes_id
+                             if 'IVA' in t.ref_tax_code_id.name] + [0])[0] * 100
                 ticket["lines"].append({
                     "item_action": "sale_item",
                     "as_gross": False,
@@ -334,8 +340,7 @@ class pos_order(osv.osv):
                         "quantity": line.qty * factor,
                         "unit_price": line.price_unit * (
                             line.discount/100.),
-                        "vat_rate": vat_rate * (
-                            line.discount/100.),
+                        "vat_rate": vat_rate,
                         "fixed_taxes": 0,
                         "taxes_rate": 0
                     })
@@ -344,7 +349,7 @@ class pos_order(osv.osv):
                     "null_pay": False,
                     "include_in_arching": False,
                     "card_pay": False,
-                    "description": st.name,
+                    "description": st.journal_id.name,
                     "extra_description": False,
                     "amount": st.amount * factor,
                 })
@@ -357,7 +362,10 @@ class pos_order(osv.osv):
             raise osv.except_osv(_('Error!'), _("Print one ticket at time"))
         for o in self.browse(cr, uid, ids):
             journal = o.session_id.config_id.journal_id
-            if journal.use_fiscal_printer:
+            if journal.use_fiscal_printer and not o.pos_reference:
+                if (o.amount_total >= 25000):
+                    raise osv.except_osv(_('Error!'), _("Total must less than 25000 $"))
+
                 credit_note = (o.amount_total < 0)
                 if credit_note:
                     ticket = o.build_ticket_notacredito()[o.id]
@@ -366,18 +374,20 @@ class pos_order(osv.osv):
                     ticket = o.build_ticket_factura()[o.id]
                     r = journal.make_ticket_factura(ticket)[journal.id]
                 _logger.info('Printer return %s' % r)
-                if r and 'error' in r:
+
+                ticket_canceled = r and r.get('error','x') == 'ticket canceled'
+                if r and 'error' in r and not ticket_canceled:
                     raise osv.except_osv(
                         _('Printer Error!'),
                         _('Printer return: %s') % r['error'])
 
                 document_type = r.get('document_type', '?')
-                point_of_sale = journal.point_of_sale or 0
+                point_of_sale = journal.point_of_sale or journal.fiscal_printer_id.pointOfSale or 0
                 document_number = r.get('document_number', '?')
-                pos_reference = ("%s:%04i-%08i" % (document_type, point_of_sale,
-                                                   int(document_number)) if
-                                 unicode(document_number).isnumeric() else
-                                 'unknown')
+                pos_reference = ("%s%s-%04i-%08i" % (
+                    "NC" if credit_note else "F",
+                    document_type, point_of_sale,
+                    int(document_number)) if unicode(document_number).isnumeric() else 'unknown')
                 self.write(cr, uid, ids, {'pos_reference': pos_reference})
                 self.create_invoice(cr, uid, ids, context=context)
                 if r.get('command', '') == 'cancel_ticket_factura':
@@ -391,5 +401,7 @@ class pos_order(osv.osv):
                                             context=context)
                     self.create_account_move(cr, uid, ids, context=context)
         return True
+
+pos_order()
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
