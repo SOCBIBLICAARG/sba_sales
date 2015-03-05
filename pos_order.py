@@ -146,11 +146,13 @@ class pos_order(osv.osv):
         inv_line_obj = self.pool.get('account.invoice.line')
         product_obj = self.pool.get('product.product')
         for o in self.browse(cr, uid, ids):
+            # Check if it is a ticket for fiscal printer
             journal = o.session_id.config_id.journal_id
             if not (journal.use_fiscal_printer and
                     o.session_id.config_id.iface_invoicing):
                 continue
 
+            # Prepare data to build invoice
             partner = journal.fiscal_printer_anon_partner_id \
                 if not o.partner_id else o.partner_id
 
@@ -159,6 +161,7 @@ class pos_order(osv.osv):
             credit_note = (o.amount_total < 0)
             o_type = 'out_invoice' if not credit_note else 'out_refund'
 
+            # Build invoice
             vals = {
                 'name': o.name,
                 'internal_number': o.pos_reference,
@@ -200,6 +203,9 @@ class pos_order(osv.osv):
             inv_obj.button_reset_taxes(cr, uid, [inv_id], context=context)
             self.signal_workflow(cr, uid, [o.id], 'invoice')
             inv_obj.signal_workflow(cr, uid, [inv_id], 'invoice_open')
+
+            # Finally update invoice in pos_order
+            self.write(cr, uid, [o.id], { 'invoice_id': inv_id }) 
 
     def refund(self, cr, uid, ids, context=None):
         r = super(pos_order, self).refund(cr, uid, ids, context=context)
@@ -400,17 +406,25 @@ class pos_order(osv.osv):
         return r
 
     def action_ticket(self, cr, uid, ids, context=None):
+        """
+        Print the ticket and generate the invoice.
+        """
         picking_obj = self.pool.get('stock.picking')
         if len(ids) != 1:
             raise osv.except_osv(_('Error!'), _("Print one ticket at time"))
         for o in self.browse(cr, uid, ids):
+            # Verify if a ticket for printer 
+            # and if pos_reference is not defined
             journal = o.session_id.config_id.journal_id
             if journal.use_fiscal_printer and not o.pos_reference:
+                # Check if amount is valid
                 if (o.amount_total >= 25000):
                     raise osv.except_osv(_('Error!'),
                                          _("Total must less than 25000 $"))
 
+                # If amount is negative is a credit note else an invoice.
                 credit_note = (o.amount_total < 0)
+                # Print ticket
                 if credit_note:
                     ticket = o.build_ticket_notacredito()[o.id]
                     r = journal.make_ticket_notacredito(ticket)[journal.id]
@@ -419,24 +433,36 @@ class pos_order(osv.osv):
                     r = journal.make_ticket_factura(ticket)[journal.id]
                 _logger.info('Printer return %s' % r)
 
+                # Verifing if the ticket was cancelled
                 ticket_canceled = r and r.get('error', 'x') == 'ticket canceled'
                 if r and 'error' in r and not ticket_canceled:
+                    # Raise if an error and not cancelation happen
                     raise osv.except_osv(
                         _('Printer Error!'),
                         _('Printer return: %s') % r['error'])
+                if 'document_type' not in r or 'document_number' not in r:
+                    raise osv.except_osv(
+                        _('Printer Error!'),
+                        _('No number was assigned!')
 
-                document_type = r.get('document_type', '?')
+                # Generate ticket number
+                document_type = r['document_type']
                 point_of_sale = (journal.point_of_sale or
                                  journal.fiscal_printer_id.pointOfSale or
                                  0)
-                document_number = r.get('document_number', '?')
+                document_number = int(r['document_number'])
                 pos_reference = ("%s%s-%04i-%08i" % (
                     "NC" if credit_note else "F",
                     document_type, point_of_sale,
-                    int(document_number))
-                    if unicode(document_number).isnumeric() else 'unknown')
+                    int(document_number)))
+
+                # Store ticket number
                 self.write(cr, uid, ids, {'pos_reference': pos_reference})
+
+                # Create the invoice
                 self.create_invoice(cr, uid, ids, context=context)
+
+                # If ticket was canceled, cancel pos_order
                 if r.get('command', '') == 'cancel_ticket_factura':
                     if (o.picking_type_id):
                         self.cancel_order(cr, uid, ids, context=context)
@@ -444,6 +470,7 @@ class pos_order(osv.osv):
                         self.write(cr, uid, ids, {'state': 'cancel'},
                                    context=context)
                 else:
+                    # Move stock products and create moves account
                     picking_obj.action_done(cr, uid, [o.picking_id.id],
                                             context=context)
                     self.create_account_move(cr, uid, ids, context=context)
