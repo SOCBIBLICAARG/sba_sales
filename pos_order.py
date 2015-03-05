@@ -9,6 +9,49 @@ from openerp.addons.l10n_ar_fpoc.invoice \
 _logger = logging.getLogger(__name__)
 
 
+class pos_order_line(osv.osv):
+    _inherit = "pos.order.line"
+
+    def onchange_product_id(self, cr, uid, ids, pricelist, product_id, qty=0,
+                            partner_id=False, context=None):
+        context = context or {}
+        if not product_id:
+            return {}
+        if not pricelist:
+            raise osv.except_osv(
+                _('No Pricelist!'),
+                _('You have to select a pricelist in the sale form !\n'
+                  'Please set one before choosing a product.'))
+
+        base_pricelist = self.pool.get('product.pricelist').search(
+            cr,
+            uid,
+            [('name', 'ilike', 'CONSUMIDOR FINAL')]
+        )
+        if not base_pricelist:
+            raise osv.except_osv(
+                _('No Pricelist base!'),
+                _('You have to create a "CONSUMIDOR FINAL" ',
+                  'price list to continue!'))
+
+        price_base = self.pool.get('product.pricelist').price_get(
+            cr, uid, base_pricelist, product_id, qty or 1.0, partner_id
+        )[base_pricelist[0]]
+
+        price = self.pool.get('product.pricelist').price_get(
+            cr, uid, [pricelist], product_id, qty or 1.0, partner_id
+        )[pricelist]
+
+        discount = (1. - (price / price_base)) * 100
+
+        result = self.onchange_qty(
+            cr, uid, ids, product_id, discount, qty, price, context=context
+        )
+        result['value']['price_unit'] = price_base
+        result['value']['discount'] = discount
+        return result
+
+
 class pos_order(osv.osv):
     _inherit = "pos.order"
 
@@ -165,7 +208,6 @@ class pos_order(osv.osv):
 
     def build_ticket_factura(self, cr, uid, ids, context=None):
         r = {}
-        factor = 1
         for o in self.browse(cr, uid, ids):
             ticket = {
                 "turist_ticket": False,
@@ -220,7 +262,7 @@ class pos_order(osv.osv):
                     "description_3": "",
                     "description_4": "",
                     "item_description": line.product_id.name,
-                    "quantity": line.qty * factor,
+                    "quantity": line.qty,
                     "unit_price": line.price_unit,
                     "vat_rate": vat_rate,
                     "fixed_taxes": 0,
@@ -240,7 +282,7 @@ class pos_order(osv.osv):
                         "description_3": "",
                         "description_4": "",
                         "item_description": "%5.2f%%" % line.discount,
-                        "quantity": line.qty * factor,
+                        "quantity": line.qty,
                         "unit_price": line.price_unit * (
                             line.discount/100.),
                         "vat_rate": vat_rate * (
@@ -262,7 +304,6 @@ class pos_order(osv.osv):
 
     def build_ticket_notacredito(self, cr, uid, ids, context=None):
         r = {}
-        factor = -1
         for o in self.browse(cr, uid, ids):
             ticket = {
                 "turist_ticket": False,
@@ -319,7 +360,7 @@ class pos_order(osv.osv):
                     "description_3": "",
                     "description_4": "",
                     "item_description": line.product_id.name,
-                    "quantity": line.qty * factor,
+                    "quantity": -line.qty,
                     "unit_price": line.price_unit,
                     "vat_rate": vat_rate,
                     "fixed_taxes": 0,
@@ -339,7 +380,7 @@ class pos_order(osv.osv):
                         "description_3": "",
                         "description_4": "",
                         "item_description": "%5.2f%%" % line.discount,
-                        "quantity": line.qty * factor,
+                        "quantity": -line.qty,
                         "unit_price": line.price_unit * (
                             line.discount/100.),
                         "vat_rate": vat_rate,
@@ -353,7 +394,7 @@ class pos_order(osv.osv):
                     "card_pay": False,
                     "description": st.journal_id.name,
                     "extra_description": False,
-                    "amount": st.amount * factor,
+                    "amount": -st.amount,
                 })
             r[o.id] = ticket
         return r
@@ -385,8 +426,9 @@ class pos_order(osv.osv):
                         _('Printer return: %s') % r['error'])
 
                 document_type = r.get('document_type', '?')
-                point_of_sale = journal.point_of_sale or \
-                    journal.fiscal_printer_id.pointOfSale or 0
+                point_of_sale = (journal.point_of_sale or
+                                 journal.fiscal_printer_id.pointOfSale or
+                                 0)
                 document_number = r.get('document_number', '?')
                 pos_reference = ("%s%s-%04i-%08i" % (
                     "NC" if credit_note else "F",
