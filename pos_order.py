@@ -443,7 +443,7 @@ class pos_order(osv.osv):
                 if 'document_type' not in r or 'document_number' not in r:
                     raise osv.except_osv(
                         _('Printer Error!'),
-                        _('No number was assigned!')
+                        _('No number was assigned!'))
 
                 # Generate ticket number
                 document_type = r['document_type']
