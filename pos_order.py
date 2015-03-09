@@ -205,7 +205,7 @@ class pos_order(osv.osv):
             inv_obj.signal_workflow(cr, uid, [inv_id], 'invoice_open')
 
             # Finally update invoice in pos_order
-            self.write(cr, uid, [o.id], { 'invoice_id': inv_id }) 
+            self.write(cr, uid, [o.id], { 'invoice_id': inv_id })
 
     def refund(self, cr, uid, ids, context=None):
         r = super(pos_order, self).refund(cr, uid, ids, context=context)
@@ -413,7 +413,7 @@ class pos_order(osv.osv):
         if len(ids) != 1:
             raise osv.except_osv(_('Error!'), _("Print one ticket at time"))
         for o in self.browse(cr, uid, ids):
-            # Verify if a ticket for printer 
+            # Verify if a ticket for printer
             # and if pos_reference is not defined
             journal = o.session_id.config_id.journal_id
             if journal.use_fiscal_printer and not o.pos_reference:
@@ -459,9 +459,6 @@ class pos_order(osv.osv):
                 # Store ticket number
                 self.write(cr, uid, ids, {'pos_reference': pos_reference})
 
-                # Create the invoice
-                self.create_invoice(cr, uid, ids, context=context)
-
                 # If ticket was canceled, cancel pos_order
                 if r.get('command', '') == 'cancel_ticket_factura':
                     if (o.picking_type_id):
@@ -474,6 +471,11 @@ class pos_order(osv.osv):
                     picking_obj.action_done(cr, uid, [o.picking_id.id],
                                             context=context)
                     self.create_account_move(cr, uid, ids, context=context)
+
+            if journal.use_fiscal_printer and o.pos_reference:
+                # Create the invoice
+                inv_id = self.create_invoice(cr, uid, ids, context=context)
+
         return True
 
 pos_order()
