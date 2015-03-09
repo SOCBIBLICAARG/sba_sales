@@ -1,0 +1,6 @@
+#!/bin/bash
+
+DB=
+USER=
+
+sudo -u $USER psql $DB -e 
