@@ -1,7 +1,4 @@
 #!/bin/bash
-#
-# Script para actualizar el numero de factura a un ticket.
-#
 
 DB=
 USER=
