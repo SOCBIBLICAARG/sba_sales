@@ -18,7 +18,7 @@
         'sales_team',
         'survey',
         'point_of_sale',
-        'l10n_ar_fpoc_pos'
+        'l10n_ar_fpoc_pos',
     ],
     'init_xml': [],
     'update': [],
