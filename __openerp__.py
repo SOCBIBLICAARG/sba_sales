@@ -18,7 +18,8 @@
         'sales_team',
         'survey',
         'point_of_sale',
-        'l10n_ar_fpoc_pos'
+        'l10n_ar_fpoc_pos',
+        'stock_negativo',
     ],
     'init_xml': [],
     'update': [],
@@ -35,7 +36,7 @@
         'views/pos_order_view.xml',
     ],
     'demo_xml': [],
-    'test':[
+    'test': [
         'tests/region.yml',
         'tests/users.yml',
         'tests/sale_teams.yml',

@@ -55,26 +55,40 @@ class pos_order_line(osv.osv):
                                             partner=partner_id)
 
         return {
-            'price_subtotal': taxes['total'],
-            'price_subtotal_incl': taxes['total_included'],
+            'price_subtotal': qty and taxes['total'],
+            'price_subtotal_incl': qty and taxes['total_included'],
             'price_unit': price_base,
             'discount': discount
         }
 
-    def onchange_product_id(self, cr, uid, ids, pricelist, product_id, qty=0,
-                            partner_id=False, context=None):
-        price_dict = self._update_price(cr, uid, ids, pricelist, product_id,
-                                        qty=qty, partner_id=partner_id,
-                                        context=context)
-        return {'value': price_dict}
+    def sbg_onchange_product_id(self, cr, uid, ids, pricelist, product_id,
+                                qty=0, partner_id=False, location_id=None,
+                                context=None):
+        price_dict = super(pos_order_line, self).sbg_onchange_product_id(
+            cr, uid, ids, pricelist, product_id,
+            qty=qty, location_id=location_id, context=context
+        )
+        if not 'value' in price_dict:
+            return price_dict
+        price_dict['value'].update(self._update_price(
+            cr, uid, ids, pricelist, product_id,
+            qty=price_dict['value'].get('qty', qty) or 0,
+            partner_id=partner_id, context=context))
+        return price_dict
 
-    def onchange_qty(self, cr, uid, ids, pricelist, product, discount, qty,
-                     price_unit, partner_id=False, context=None):
-        price_dict = self._update_price(cr, uid, ids, pricelist, product,
-                                        qty=qty, partner_id=partner_id,
-                                        context=context)
-        return {'value': price_dict}
-
+    def sbg_onchange_qty(self, cr, uid, ids, pricelist, product, discount, qty,
+                     price_unit, location_id, partner_id=False, context=None):
+        price_dict = super(pos_order_line, self).sbg_onchange_qty(
+            cr, uid, ids, product, discount, qty, price_unit, location_id,
+            context=context
+        )
+        if not 'value' in price_dict:
+            return price_dict
+        price_dict['value'].update(self._update_price(
+            cr, uid, ids, pricelist, product,
+            qty=price_dict['value'].get('qty', qty) or 0,
+            partner_id=partner_id, context=context))
+        return price_dict
 
 class pos_order(osv.osv):
     _inherit = "pos.order"
@@ -315,8 +329,7 @@ class pos_order(osv.osv):
                         "quantity": line.qty,
                         "unit_price": line.price_unit * (
                             line.discount/100.),
-                        "vat_rate": vat_rate * (
-                            line.discount/100.),
+                        "vat_rate": vat_rate,
                         "fixed_taxes": 0,
                         "taxes_rate": 0
                     })
