@@ -59,7 +59,7 @@ class res_partner(osv.osv):
             for obj in self.browse(cr, uid, ids, context=context):
                 if obj.supplier and obj.is_company:
                     if (not obj.name) or (not obj.city) or (not obj.street) or (not obj.zip) or (not obj.email) \
-                        or (not obj.document_number) or (not obj.document_type_id): 
+                        or (not obj.document_number) or (not obj.document_type_id):
                         return False
                 if obj.customer and obj.is_company:
                     if (not obj.name) or (not obj.city) or (not obj.street) or (not obj.user_id) or (not obj.zip) or (not obj.email) \
@@ -82,8 +82,8 @@ class res_partner(osv.osv):
 
 
         _constraints = [
-		(_check_null_values, 'Nombre, calle, ciudad, codigo postal, email, CUIT, resp. fiscal, term.pago, canal, region y promotor\nson campos que no pueden ser nulos',['name','city','street','user_id','zip','email','region','canal']),
-		(_check_phones, 'Se debe ingresar el telefono o celular',['phone','mobile']),
+		#(_check_null_values, 'Nombre, calle, ciudad, codigo postal, email, CUIT, resp. fiscal, term.pago, canal, region y promotor\nson campos que no pueden ser nulos',['name','city','street','user_id','zip','email','region','canal']),
+		#(_check_phones, 'Se debe ingresar el telefono o celular',['phone','mobile']),
 		]
 
 	_columns = {
@@ -97,7 +97,7 @@ class res_partner(osv.osv):
 	        'user_id': fields.many2one('res.users', 'Promotor', help='The internal user that is in charge of communicating with this contact if any.'),
 		'warehouse_id': fields.many2one('stock.warehouse','Warehouse'),
 		}
-       
+
         def write(self, cr, uid, ids, vals, context=None):
             if 'name' in vals:
 		if vals['name']:
@@ -135,5 +135,5 @@ class res_partner(osv.osv):
 				if pricelist_id:
 					vals['property_product_pricelist'] = pricelist_id
             return super(res_partner, self).create(cr, uid, vals, context=context)
-	
+
 res_partner()

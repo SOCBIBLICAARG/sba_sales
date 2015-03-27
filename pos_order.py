@@ -12,8 +12,11 @@ _logger = logging.getLogger(__name__)
 class pos_order_line(osv.osv):
     _inherit = "pos.order.line"
 
-    def onchange_product_id(self, cr, uid, ids, pricelist, product_id, qty=0,
-                            partner_id=False, context=None):
+    def _update_price(self, cr, uid, ids, pricelist, product_id, qty=0,
+                      partner_id=False, context=None):
+        account_tax_obj = self.pool.get('account.tax')
+        prod_obj = self.pool.get('product.product')
+
         context = context or {}
         if not product_id:
             return {}
@@ -44,13 +47,48 @@ class pos_order_line(osv.osv):
 
         discount = (1. - (price / price_base)) * 100
 
-        result = self.onchange_qty(
-            cr, uid, ids, product_id, discount, qty, price, context=context
-        )
-        result['value']['price_unit'] = price_base
-        result['value']['discount'] = discount
-        return result
+        prod = prod_obj.browse(cr, uid, product_id, context=context)
+        taxes = account_tax_obj.compute_all(cr, uid, prod.taxes_id,
+                                            price,
+                                            qty,
+                                            product=prod,
+                                            partner=partner_id)
 
+        return {
+            'price_subtotal': qty and taxes['total'],
+            'price_subtotal_incl': qty and taxes['total_included'],
+            'price_unit': price_base,
+            'discount': discount
+        }
+
+    def sbg_onchange_product_id(self, cr, uid, ids, pricelist, product_id,
+                                qty=0, partner_id=False, location_id=None,
+                                context=None):
+        price_dict = super(pos_order_line, self).sbg_onchange_product_id(
+            cr, uid, ids, pricelist, product_id,
+            qty=qty, location_id=location_id, context=context
+        )
+        if not 'value' in price_dict:
+            return price_dict
+        price_dict['value'].update(self._update_price(
+            cr, uid, ids, pricelist, product_id,
+            qty=price_dict['value'].get('qty', qty) or 0,
+            partner_id=partner_id, context=context))
+        return price_dict
+
+    def sbg_onchange_qty(self, cr, uid, ids, pricelist, product, discount, qty,
+                     price_unit, location_id, partner_id=False, context=None):
+        price_dict = super(pos_order_line, self).sbg_onchange_qty(
+            cr, uid, ids, product, discount, qty, price_unit, location_id,
+            context=context
+        )
+        if not 'value' in price_dict:
+            return price_dict
+        price_dict['value'].update(self._update_price(
+            cr, uid, ids, pricelist, product,
+            qty=price_dict['value'].get('qty', qty) or 0,
+            partner_id=partner_id, context=context))
+        return price_dict
 
 class pos_order(osv.osv):
     _inherit = "pos.order"
@@ -205,7 +243,7 @@ class pos_order(osv.osv):
             inv_obj.signal_workflow(cr, uid, [inv_id], 'invoice_open')
 
             # Finally update invoice in pos_order
-            self.write(cr, uid, [o.id], { 'invoice_id': inv_id })
+            self.write(cr, uid, [o.id], {'invoice_id': inv_id})
 
     def refund(self, cr, uid, ids, context=None):
         r = super(pos_order, self).refund(cr, uid, ids, context=context)
@@ -291,8 +329,7 @@ class pos_order(osv.osv):
                         "quantity": line.qty,
                         "unit_price": line.price_unit * (
                             line.discount/100.),
-                        "vat_rate": vat_rate * (
-                            line.discount/100.),
+                        "vat_rate": vat_rate,
                         "fixed_taxes": 0,
                         "taxes_rate": 0
                     })
