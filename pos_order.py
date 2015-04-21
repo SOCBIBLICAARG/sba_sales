@@ -444,7 +444,7 @@ class pos_order(osv.osv):
 
     def action_ticket(self, cr, uid, ids, context=None):
         """
-        Print the ticket and generate the invoice.
+        Prints ticket and generate invoice.
         """
         picking_obj = self.pool.get('stock.picking')
         if len(ids) != 1:
