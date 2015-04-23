@@ -68,27 +68,32 @@ class pos_order_line(osv.osv):
             cr, uid, ids, pricelist, product_id,
             qty=qty, location_id=location_id, context=context
         )
-        if not 'value' in price_dict:
+
+        if 'value' not in price_dict:
             return price_dict
+
         price_dict['value'].update(self._update_price(
             cr, uid, ids, pricelist, product_id,
             qty=price_dict['value'].get('qty', qty) or 0,
             partner_id=partner_id, context=context))
         return price_dict
 
-    def sbg_onchange_qty(self, cr, uid, ids, pricelist, product, discount, qty,
-                     price_unit, location_id, partner_id=False, context=None):
+    def sbg_onchange_qty(self, cr, uid, ids,
+                         pricelist, product, discount, qty,
+                         price_unit, location_id,
+                         partner_id=False, context=None):
         price_dict = super(pos_order_line, self).sbg_onchange_qty(
             cr, uid, ids, product, discount, qty, price_unit, location_id,
             context=context
         )
-        if not 'value' in price_dict:
+        if 'value' not in price_dict:
             return price_dict
         price_dict['value'].update(self._update_price(
             cr, uid, ids, pricelist, product,
             qty=price_dict['value'].get('qty', qty) or 0,
             partner_id=partner_id, context=context))
         return price_dict
+
 
 class pos_order(osv.osv):
     _inherit = "pos.order"
@@ -217,7 +222,8 @@ class pos_order(osv.osv):
                 cr, uid, [], o_type, partner.id)['value'])
             if not vals.get('account_id', None):
                 vals['account_id'] = acc
-            inv_id = inv_obj.create(cr, uid, vals, context=context)
+            inv_id = inv_obj.create(cr, uid, vals,
+                                    context=dict(context, not_auto_journal=1))
             for line in o.lines:
                 vals = {
                     'invoice_id': inv_id,
